@@ -22,7 +22,7 @@ export default function Home() {
       <section className="shell hero" id="top">
         <div>
           <div className="eyebrow">Curated crypto intelligence</div>
-          <h1>See what matters.<br/>Before the noise.</h1>
+          <h1><span className="hero-main">See what matters.</span><span className="hero-sub">Before the noise.</span></h1>
           <p>Market-moving crypto news, high-impact events, and sector rotation — filtered down to what a trader actually needs to know.</p>
           <div className="actions"><a className="btn primary" href="#market">Explore REVEDGE</a><a className="btn" href="#pro">Go Pro</a></div>
         </div>
@@ -33,9 +33,11 @@ export default function Home() {
         <div className="sectiontitle"><div><div className="label">Priority feed</div><h2>High Impact</h2></div><span className="sub">Only what can move the market.</span></div>
         <div className="grid">
           <article className="card impact">
-            <div className="impacttop"><span className="badge">HIGH IMPACT · ACTIVE</span><span className="score">8.7<span className="scoremax"> / 10</span></span></div>
-            <div className="impactmeter" aria-label="Impact 8.7 out of 10"><span className="impactfill" /></div>
-            <div className="impactscale"><span>LOW</span><span>MEDIUM</span><span>HIGH</span><span>CRITICAL</span></div>
+            <div className="impacttop"><span className="badge">HIGH IMPACT · ACTIVE</span></div>
+            <div className="impactmeter" aria-label="Impact 9 out of 10">
+              {Array.from({ length: 10 }, (_, i) => <span key={i} className={`impactsegment ${i < 9 ? "active" : ""}`} />)}
+            </div>
+            <div className="impactscale"><span>1</span><span>3</span><span>5</span><span>7</span><span>10</span></div>
             <h3>Fed signal shifts rate expectations</h3>
             <p className="muted">Markets are repricing the path for rates. The key question for crypto is whether liquidity expectations strengthen or tighten from here.</p>
             <div className="meta"><span className="chip">MACRO</span><span className="chip">BTC · ETH · SOL</span><span className="chip">Risk catalyst</span></div>
