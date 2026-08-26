@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const symbols = [
   { label: "BTC", symbol: "BINANCE:BTCUSDT" },
@@ -8,31 +8,68 @@ const symbols = [
   { label: "SOL", symbol: "BINANCE:SOLUSDT" },
 ];
 
-function widgetUrl(symbol: string) {
-  const params = new URLSearchParams({
-    symbol,
-    interval: "60",
-    theme: "dark",
-    style: "1",
-    timezone: "Etc/UTC",
-    locale: "en",
-    hide_top_toolbar: "0",
-    hide_side_toolbar: "0",
-    hide_legend: "0",
-    hide_volume: "0",
-    withdateranges: "1",
-    allow_symbol_change: "0",
-    save_image: "0",
-    calendar: "0",
-    backgroundColor: "#0d0d0b",
-    gridColor: "rgba(128,98,59,0.10)",
-    support_host: "https://www.tradingview.com",
-  });
-  return `https://www.tradingview.com/widgetembed/?${params.toString()}`;
-}
+type TradingViewWindow = Window & {
+  TradingView?: {
+    widget: new (options: Record<string, unknown>) => unknown;
+  };
+};
 
 export default function TradingViewChart() {
   const [active, setActive] = useState(symbols[0]);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    container.innerHTML = "";
+
+    const mount = () => {
+      const tv = (window as TradingViewWindow).TradingView;
+      if (!tv || !containerRef.current) return;
+      containerRef.current.innerHTML = "";
+      const holder = document.createElement("div");
+      holder.style.width = "100%";
+      holder.style.height = "100%";
+      containerRef.current.appendChild(holder);
+
+      new tv.widget({
+        autosize: true,
+        symbol: active.symbol,
+        interval: "60",
+        timezone: "Etc/UTC",
+        theme: "dark",
+        style: "1",
+        locale: "en",
+        enable_publishing: false,
+        hide_top_toolbar: false,
+        hide_legend: false,
+        hide_side_toolbar: false,
+        allow_symbol_change: false,
+        save_image: false,
+        withdateranges: true,
+        studies: [],
+        backgroundColor: "#0d0d0b",
+        gridColor: "rgba(128,98,59,0.10)",
+        container: holder,
+      });
+    };
+
+    const existing = document.querySelector<HTMLScriptElement>('script[data-revedge-tradingview="true"]');
+    if (existing) {
+      if ((window as TradingViewWindow).TradingView) mount();
+      else existing.addEventListener("load", mount, { once: true });
+      return () => existing.removeEventListener("load", mount);
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://s3.tradingview.com/tv.js";
+    script.async = true;
+    script.dataset.revedgeTradingview = "true";
+    script.addEventListener("load", mount, { once: true });
+    document.head.appendChild(script);
+
+    return () => script.removeEventListener("load", mount);
+  }, [active]);
 
   return (
     <section className="shell section" id="charts">
@@ -47,14 +84,7 @@ export default function TradingViewChart() {
           ))}
         </div>
         <div className="chartwrap">
-          <iframe
-            key={active.symbol}
-            title={`${active.label} TradingView chart`}
-            src={widgetUrl(active.symbol)}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            allow="fullscreen"
-          />
+          <div ref={containerRef} className="chartembed" />
         </div>
       </div>
     </section>
