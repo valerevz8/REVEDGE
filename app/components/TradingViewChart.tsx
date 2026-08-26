@@ -13,14 +13,16 @@ export default function TradingViewChart() {
   const [active, setActive] = useState(symbols[0]);
 
   useEffect(() => {
-    if (!container.current) return;
+    const root = container.current;
+    if (!root) return;
 
-    container.current.innerHTML = "";
+    root.innerHTML = "";
+
     const widget = document.createElement("div");
     widget.className = "tradingview-widget-container__widget";
     widget.style.width = "100%";
     widget.style.height = "100%";
-    container.current.appendChild(widget);
+    root.appendChild(widget);
 
     const script = document.createElement("script");
     script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
@@ -28,25 +30,34 @@ export default function TradingViewChart() {
     script.async = true;
     script.innerHTML = JSON.stringify({
       autosize: true,
+      width: "100%",
+      height: "100%",
       symbol: active.symbol,
       interval: "60",
       timezone: "Etc/UTC",
       theme: "dark",
+      backgroundColor: "#0d0d0b",
+      gridColor: "rgba(128,98,59,0.10)",
       style: "1",
       locale: "en",
       allow_symbol_change: true,
+      withdateranges: true,
       hide_top_toolbar: false,
+      hide_side_toolbar: false,
       hide_legend: false,
       save_image: false,
       calendar: false,
       hide_volume: false,
+      details: false,
+      hotlist: false,
+      studies: [],
       support_host: "https://www.tradingview.com",
     });
 
-    container.current.appendChild(script);
+    root.appendChild(script);
 
     return () => {
-      if (container.current) container.current.innerHTML = "";
+      root.innerHTML = "";
     };
   }, [active]);
 
@@ -65,6 +76,7 @@ export default function TradingViewChart() {
           {symbols.map((item) => (
             <button
               key={item.label}
+              type="button"
               className={`charttab ${active.label === item.label ? "active" : ""}`}
               onClick={() => setActive(item)}
             >
@@ -72,7 +84,7 @@ export default function TradingViewChart() {
             </button>
           ))}
         </div>
-        <div className="chartwrap" ref={container} />
+        <div className="chartwrap" ref={container} aria-label={`${active.label} TradingView chart`} />
       </div>
     </section>
   );
