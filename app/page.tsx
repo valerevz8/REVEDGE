@@ -41,7 +41,6 @@ export default function Home() {
             <h3>Fed signal shifts rate expectations</h3>
             <p className="muted">Markets are repricing the path for rates. The key question for crypto is whether liquidity expectations strengthen or tighten from here.</p>
             <div className="meta"><span className="chip">MACRO</span><span className="chip">BTC · ETH · SOL</span><span className="chip">Risk catalyst</span></div>
-            <div className="window"><span className="label">Impact window</span><div className="bar"><div className="fill" /></div><div className="windowline"><span>████████░░</span><span>6–24H · ACTIVE</span></div></div>
           </article>
           <div className="card"><div className="label">Why it matters</div><h3>Liquidity first.</h3><p className="muted">BTC sets the weather. ETH and SOL confirm whether the move is broadening. High-beta sectors react next.</p><div className="meta"><span className="chip">BTC → ETH → SOL</span><span className="chip">Watch breadth</span></div></div>
         </div>
