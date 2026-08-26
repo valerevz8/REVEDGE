@@ -8,15 +8,16 @@ export default function Home() {
     <main>
       <header className="shell nav">
         <a className="brand" href="#top"><span className="brand-rev">REV</span><span className="brand-edge">EDGE</span></a>
-        <nav className="navlinks"><a href="#market">Market</a><a href="#impact">High Impact</a><a href="#charts">Charts</a><a href="#sectors">Sectors</a><a href="#pro">Pricing</a></nav>
+        <nav className="navlinks"><a href="#impact">High Impact</a><a href="#market">Market</a><a href="#charts">Charts</a><a href="#sectors">Sectors</a><a href="#pro">Pricing</a></nav>
         <div className="navright"><span className="lang">EN / ID</span><a className="sign" href="#pro">Sign in</a><button className="probtn">Go Pro</button></div>
       </header>
+
+      <HighImpact />
 
       <section className="shell hero" id="top">
         <div><div className="eyebrow">Curated crypto intelligence</div><h1><span className="hero-main">See what matters.</span><span className="hero-sub">Before the noise.</span></h1><p>Market-moving events, live market structure, and capital rotation — filtered down to what a trader actually needs to know.</p><div className="actions"><a className="btn primary" href="#impact">Explore REVEDGE</a><a className="btn" href="#pro">Go Pro</a></div></div><MarketNow />
       </section>
 
-      <HighImpact />
       <TradingViewChart />
       <SectorRadar />
 
