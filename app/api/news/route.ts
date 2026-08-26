@@ -1,74 +1,12 @@
 import { NextResponse } from "next/server";
-
-const FEEDS = [
-  { name: "CoinDesk", url: "https://www.coindesk.com/arc/outboundfeeds/rss/" },
-  { name: "Cointelegraph", url: "https://cointelegraph.com/rss" },
-  { name: "Decrypt", url: "https://decrypt.co/feed" },
-  { name: "Bitcoin Magazine", url: "https://bitcoinmagazine.com/.rss/full/" },
-];
-
-function clean(value: string) {
-  return value.replace(/<!\[CDATA\[|\]\]>/g, "").replace(/<[^>]+>/g, " ").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&apos;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/\s+/g, " ").trim();
-}
-
-function tagFor(title: string) {
-  const t = title.toLowerCase();
-  if (/bitcoin|btc|etf/.test(t)) return "BTC";
-  if (/ethereum|eth|layer 2|l2/.test(t)) return "ETH";
-  if (/solana|sol/.test(t)) return "SOL";
-  if (/meme|doge|shib|pepe|bonk|wif/.test(t)) return "MEME";
-  if (/fed|fomc|inflation|cpi|pce|rate|treasury|yield|dollar|macro/.test(t)) return "MACRO";
-  if (/ai|artificial intelligence|compute/.test(t)) return "AI";
-  if (/defi|dex|lending|stablecoin/.test(t)) return "DEFI";
-  return "CRYPTO";
-}
-
-function score(title: string) {
-  const t = title.toLowerCase();
-  let value = 4;
-  const strong = ["etf", "sec", "fed", "fomc", "hack", "exploit", "ban", "approval", "approved", "lawsuit", "liquidation", "tariff", "war", "sanction", "collapse", "surge", "crash", "emergency", "rate cut", "rate hike"];
-  const medium = ["bitcoin", "ethereum", "solana", "stablecoin", "regulation", "institutional", "whale", "fund", "exchange", "listing", "unlock"];
-  strong.forEach((word) => { if (t.includes(word)) value += 1.3; });
-  medium.forEach((word) => { if (t.includes(word)) value += 0.35; });
-  return Math.max(1, Math.min(10, Math.round(value * 10) / 10));
-}
-
-function direction(title: string): "Risk-on" | "Risk-off" | "Neutral" {
-  const t = title.toLowerCase();
-  if (/hack|exploit|ban|lawsuit|liquidation|crash|collapse|sanction|outflow|sell-off|selling/.test(t)) return "Risk-off";
-  if (/approval|approved|inflow|surge|adoption|launch|partnership|record|buying|bullish/.test(t)) return "Risk-on";
-  return "Neutral";
-}
-
-function extractItems(xml: string, source: string) {
-  const blocks = xml.match(/<item[\s\S]*?<\/item>/gi) ?? [];
-  return blocks.slice(0, 12).map((block) => {
-    const title = clean(block.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? "");
-    const link = clean(block.match(/<link[^>]*>([\s\S]*?)<\/link>/i)?.[1] ?? "");
-    const published = clean(block.match(/<(?:pubDate|published|updated)[^>]*>([\s\S]*?)<\/(?:pubDate|published|updated)>/i)?.[1] ?? "");
-    if (!title || !link) return null;
-    const publishedAt = new Date(published).toISOString();
-    return { title, link, source, publishedAt, impact: score(title), tag: tagFor(title), direction: direction(title) };
-  }).filter(Boolean) as Array<{ title: string; link: string; source: string; publishedAt: string; impact: number; tag: string; direction: "Risk-on" | "Risk-off" | "Neutral" }>;
-}
-
-export async function GET() {
-  const responses = await Promise.allSettled(FEEDS.map(async (feed) => {
-    const response = await fetch(feed.url, { headers: { "User-Agent": "REVEDGE/0.1 (+https://revedge.netlify.app)" }, next: { revalidate: 60 } });
-    if (!response.ok) throw new Error(`${feed.name} unavailable`);
-    return extractItems(await response.text(), feed.name);
-  }));
-
-  const stories = responses.flatMap((result) => result.status === "fulfilled" ? result.value : []);
-  const unique = new Map<string, (typeof stories)[number]>();
-  for (const story of stories) unique.set(story.title.toLowerCase(), story);
-
-  const curated = [...unique.values()]
-    .filter((story) => Date.now() - new Date(story.publishedAt).getTime() < 48 * 60 * 60 * 1000)
-    .sort((a, b) => (b.impact - a.impact) || (new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()))
-    .slice(0, 12);
-
-  return NextResponse.json({ stories: curated, sources: FEEDS.map((f) => f.name), updatedAt: new Date().toISOString() }, {
-    headers: { "Cache-Control": "s-maxage=60, stale-while-revalidate=120" },
-  });
-}
+const FEEDS=[{name:"CoinDesk",url:"https://www.coindesk.com/arc/outboundfeeds/rss/"},{name:"Cointelegraph",url:"https://cointelegraph.com/rss"},{name:"Decrypt",url:"https://decrypt.co/feed"},{name:"Bitcoin Magazine",url:"https://bitcoinmagazine.com/.rss/full/"}];
+function clean(v:string){return v.replace(/<!\[CDATA\[|\]\]>/g,"").replace(/<[^>]+>/g," ").replace(/&amp;/g,"&").replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&apos;/g,"'").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/\s+/g," ").trim();}
+function tagFor(t:string){const x=t.toLowerCase();if(/bitcoin|btc|etf/.test(x))return"BTC";if(/ethereum|eth|layer 2|l2/.test(x))return"ETH";if(/solana|sol/.test(x))return"SOL";if(/meme|doge|shib|pepe|bonk|wif/.test(x))return"MEME";if(/fed|fomc|inflation|cpi|pce|rate|treasury|yield|dollar|macro/.test(x))return"MACRO";if(/ai|artificial intelligence|compute/.test(x))return"AI";if(/defi|dex|lending|stablecoin/.test(x))return"DEFI";return"CRYPTO";}
+function score(t:string){const x=t.toLowerCase();let v=4;["etf","sec","fed","fomc","hack","exploit","ban","approval","approved","lawsuit","liquidation","tariff","war","sanction","collapse","surge","crash","emergency","rate cut","rate hike"].forEach(w=>{if(x.includes(w))v+=1.3});["bitcoin","ethereum","solana","stablecoin","regulation","institutional","whale","fund","exchange","listing","unlock"].forEach(w=>{if(x.includes(w))v+=.35});return Math.max(1,Math.min(10,Math.round(v*10)/10));}
+function direction(t:string):"Risk-on"|"Risk-off"|"Neutral"{const x=t.toLowerCase();if(/hack|exploit|ban|lawsuit|liquidation|crash|collapse|sanction|outflow|sell-off|selling/.test(x))return"Risk-off";if(/approval|approved|inflow|surge|adoption|launch|partnership|record|buying|bullish/.test(x))return"Risk-on";return"Neutral";}
+function affected(tag:string){if(tag==="BTC"||tag==="MACRO")return ["BTC","ETH","SOL","ALT"];if(tag==="ETH")return ["ETH","SOL","ALT"];if(tag==="SOL")return ["SOL","MEME","ALT"];if(tag==="MEME")return ["MEME","SOL"];return [tag];}
+function windowFor(impact:number){if(impact>=8.5)return"6–24H";if(impact>=7)return"3–12H";if(impact>=5.5)return"1–6H";return"<3H";}
+function urgencyFor(impact:number,iso:string){const age=Date.now()-new Date(iso).getTime();if(impact>=8&&age<6*60*60*1000)return"NOW";if(impact>=6)return"WATCH";return"LOW";}
+function whyFor(tag:string,d:string){if(tag==="MACRO")return`Macro news can change liquidity expectations and therefore the BTC regime. ${d} risk should be confirmed with price and breadth.`;if(tag==="BTC")return`BTC is the primary market driver. A meaningful BTC move can propagate into ETH, SOL and high-beta alts.`;if(tag==="ETH")return`ETH can confirm or weaken broader alt participation. Watch ETH/BTC and whether SOL follows.`;if(tag==="SOL"||tag==="MEME")return`High-beta crypto can amplify the move. Confirm broader market direction before chasing sector strength.`;return`The event is relevant to crypto, but price confirmation is still required before treating it as actionable.`;}
+function extractItems(xml:string,source:string){const blocks=xml.match(/<item[\s\S]*?<\/item>/gi)??[];return blocks.slice(0,12).map(block=>{const title=clean(block.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]??"");const link=clean(block.match(/<link[^>]*>([\s\S]*?)<\/link>/i)?.[1]??"");const published=clean(block.match(/<(?:pubDate|published|updated)[^>]*>([\s\S]*?)<\/(?:pubDate|published|updated)>/i)?.[1]??"");if(!title||!link)return null;const publishedAt=new Date(published).toISOString();const tag=tagFor(title);const impact=score(title);const dir=direction(title);return{title,link,source,publishedAt,impact,tag,direction:dir,urgency:urgencyFor(impact,publishedAt),window:windowFor(impact),confidence:Math.min(96,62+Math.round(impact*2.5)+(source==="CoinDesk"?8:source==="Cointelegraph"?5:2)),affected:affected(tag),why:whyFor(tag,dir)};}).filter(Boolean) as Array<any>;}
+export async function GET(){const responses=await Promise.allSettled(FEEDS.map(async feed=>{const r=await fetch(feed.url,{headers:{"User-Agent":"REVEDGE/0.1 (+https://revedge.netlify.app)"},next:{revalidate:60}});if(!r.ok)throw 0;return extractItems(await r.text(),feed.name);}));const stories=responses.flatMap(r=>r.status==="fulfilled"?r.value:[]);const unique=new Map<string,any>();for(const s of stories)unique.set(s.title.toLowerCase(),s);const curated=[...unique.values()].filter(s=>Date.now()-new Date(s.publishedAt).getTime()<48*60*60*1000).sort((a,b)=>(b.impact-a.impact)||(new Date(b.publishedAt).getTime()-new Date(a.publishedAt).getTime())).slice(0,12);return NextResponse.json({stories:curated,sources:FEEDS.map(f=>f.name),updatedAt:new Date().toISOString()},{headers:{"Cache-Control":"s-maxage=60, stale-while-revalidate=120"}});}
