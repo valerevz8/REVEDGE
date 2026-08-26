@@ -2,149 +2,27 @@
 
 import { useEffect, useState } from "react";
 
-type Story = {
-  title: string;
-  source: string;
-  link: string;
-  publishedAt: string;
-  impact: number;
-  tag: string;
-  direction: "Risk-on" | "Risk-off" | "Neutral";
-  urgency: "NOW" | "WATCH";
-  window: string;
-  confidence: number;
-  affected: string[];
-  why: string;
-  whatToDo: string;
-  avoid: string;
-  whatToWatch: string[];
-  invalidation: string;
-};
-
-type MarketCoin = { symbol: string; price: number; change: number };
-type MarketData = { coins: MarketCoin[]; total2: number; total2Change: number; total3: number; total3Change: number };
-
-function ageLabel(iso: string) {
-  const mins = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
-  if (mins < 60) return `${mins}m`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h`;
-  return `${Math.floor(hours / 24)}d`;
+type Row = { watch: string; trigger: string; invalidation: string };
+type Story = { title:string; source:string; link:string; publishedAt:string; impact:number; tag:string; direction:"Risk-on"|"Risk-off"|"Neutral"; urgency:"NOW"|"WATCH"; window:string; confidence:number; affected:string[]; why:string[]; whatToDo:string; avoid:string; regime:string; bias:string; sharpHeadline:string; narrative:string; tradableSetup:string; finalAction:string; triggerRows:Row[]; bullCase:string; bearCase:string };
+type MarketData = { coins:{symbol:string;price:number;change:number}[]; total2:number; total2Change:number; total3:number; total3Change:number };
+function ageLabel(iso:string){const mins=Math.max(0,Math.floor((Date.now()-new Date(iso).getTime())/60000));if(mins<60)return `${mins}m`;const h=Math.floor(mins/60);if(h<24)return `${h}h`;return `${Math.floor(h/24)}d`}
+function timeLabel(iso:string){return new Date(iso).toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",hour12:false,timeZone:"Asia/Jakarta"})+" WIB"}
+export default function HighImpact(){
+ const [story,setStory]=useState<Story|null>(null); const [market,setMarket]=useState<MarketData|null>(null); const [status,setStatus]=useState("Loading intelligence…");
+ useEffect(()=>{let mounted=true;const load=async()=>{try{const [n,m]=await Promise.all([fetch("/api/news",{cache:"no-store"}),fetch("/api/market",{cache:"no-store"})]);if(!n.ok||!m.ok)throw 0;const [news,next]=await Promise.all([n.json(),m.json()]);if(mounted){setStory(news.stories?.[0]??null);setMarket(next);setStatus(news.stories?.length?"LIVE · refreshed 60s":"No high-impact event detected")}}catch{if(mounted)setStatus("Intelligence unavailable")}};load();const t=setInterval(load,60000);return()=>{mounted=false;clearInterval(t)}},[]);
+ if(!story)return <section className="shell section vex-impact" id="impact"><div className="vex-head"><div><div className="vex-kicker">PRIORITY FEED</div><h2>High Impact</h2></div><span>{status}</span></div><div className="vex-empty">No sufficiently relevant market-moving event is available. REVEDGE will not manufacture a setup from noise.</div><VexStyles/></section>;
+ const dot=story.direction==="Risk-on"?"green":story.direction==="Risk-off"?"red":"yellow";
+ return <section className="shell section vex-impact" id="impact">
+  <div className="vex-head"><div><div className="vex-kicker">PRIORITY FEED</div><h2>High Impact</h2></div><span>LIVE · refreshed 60s</span></div>
+  <article className="vex-hero"><div className="vex-alert">🚨 VEX HIGH-IMPACT</div><h1>{story.sharpHeadline}</h1>
+   <div className="vex-metrics"><div><small>Priority</small><strong>🔥 {story.impact.toFixed(0)}/10</strong></div><div><small>Trade Urgency</small><strong>{story.urgency==="NOW"?"WATCH CLOSELY":"MONITOR"}</strong></div><div><small>Regime</small><strong><i className={`vex-dot ${story.regime==="Risk-On"?"green":"orange"}`}/> {story.regime}</strong></div><div><small>Bias</small><strong><i className={`vex-dot ${dot}`}/> {story.bias}</strong></div></div>
+   <div className="vex-event"><p><b>Event:</b> {story.title}</p><p><b>Event Time:</b> {timeLabel(story.publishedAt)}</p><p><b>Alert Issued:</b> {timeLabel(new Date().toISOString())}</p><p><b>Time Since Event:</b> ~{ageLabel(story.publishedAt)}</p></div>
+   <div className="vex-section-title">💥 IMPACT WINDOW</div><div className="vex-windowbar">{Array.from({length:10},(_,i)=><span key={i} className={i<7?"active":""}/>)}</div><div className="vex-windowline"><span>🟢 ACTIVE</span><b>{story.window}</b></div><div className="vex-windowmeta"><span>Expected Impact Window: {story.window}</span><span>Remaining relevance: HIGH — current session</span></div>
+  </article>
+  <section className="vex-block"><div className="vex-section-title">🎯 WHY IT MATTERS</div><ul className="vex-bullets">{story.why.map((x,i)=><li key={i}>{x}</li>)}</ul><div className="vex-readouts"><div><span>NARRATIVE / ROTATION:</span> <b className={story.direction==="Risk-off"?"orange-text":"green-text"}>{story.narrative.toUpperCase()}</b></div><div><span>TRADABLE SETUP:</span> <b className="yellow-text">{story.tradableSetup}</b></div></div></section>
+  <section className="vex-block"><div className="vex-section-title">👀 WHAT TO WATCH</div><div className="vex-table"><div className="vex-tr vex-th"><span>Watch</span><span>Trigger</span><span>Invalidation</span></div>{story.triggerRows.map(r=><div className="vex-tr" key={r.watch}><span><b>{r.watch}</b></span><span>{r.trigger}</span><span>{r.invalidation}</span></div>)}</div></section>
+  <section className="vex-block vex-final"><div className="vex-section-title">⚡ FINAL ACTION</div><h3><i className={`vex-big-dot ${dot}`}/> {story.finalAction}</h3><p className="vex-label">Entry style:</p><p className="vex-entry">{story.whatToDo}</p><p className="vex-avoid"><b>Avoid:</b> 🔴 {story.avoid}</p><div className="vex-scenario green-case"><span>🟢 Bull recovery</span><p>{story.bullCase}</p><b>→ LOOK FOR LONG / RISK-ON CONFIRMATION</b></div><div className="vex-scenario red-case"><span>🔴 Macro rejection</span><p>{story.bearCase}</p><b>→ REDUCE RISK / NO NEW LONGS</b></div></section>
+  <section className="vex-one-line"><span>🧠 ONE-LINE READ</span><p>{story.sharpHeadline}. <b>The headline is the catalyst; price reaction is the trade.</b></p><div className="vex-source">{story.source} · {story.confidence}% confidence · <a href={story.link} target="_blank" rel="noreferrer">source ↗</a></div></section><VexStyles/>
+ </section>
 }
-
-function price(value: number) {
-  if (!value) return "—";
-  if (value >= 1000) return `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
-  if (value >= 1) return `$${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
-  return `$${value.toLocaleString(undefined, { maximumFractionDigits: 5 })}`;
-}
-
-function signal(change: number) {
-  if (change >= 1) return "green";
-  if (change <= -2) return "red";
-  if (change <= -0.5) return "orange";
-  return "yellow";
-}
-
-export default function HighImpact() {
-  const [story, setStory] = useState<Story | null>(null);
-  const [market, setMarket] = useState<MarketData | null>(null);
-  const [status, setStatus] = useState("Loading live intelligence…");
-
-  useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      try {
-        const [newsRes, marketRes] = await Promise.all([
-          fetch("/api/news", { cache: "no-store" }),
-          fetch("/api/market", { cache: "no-store" }),
-        ]);
-        if (!newsRes.ok || !marketRes.ok) throw new Error("unavailable");
-        const [news, nextMarket] = await Promise.all([newsRes.json(), marketRes.json()]);
-        if (mounted) {
-          setStory(news.stories?.[0] ?? null);
-          setMarket(nextMarket);
-          setStatus(news.stories?.length ? "LIVE · refreshed 60s" : "No high-impact event detected");
-        }
-      } catch {
-        if (mounted) setStatus("Live intelligence unavailable");
-      }
-    };
-    load();
-    const timer = setInterval(load, 60000);
-    return () => { mounted = false; clearInterval(timer); };
-  }, []);
-
-  if (!story) return (
-    <section className="shell section" id="impact">
-      <div className="sectiontitle"><div><div className="label">Priority feed</div><h2>High Impact</h2></div><span className="sub">{status}</span></div>
-      <div className="card newsempty">No sufficiently relevant market-moving event is available right now. REVEDGE will not fill the page with noise.</div>
-    </section>
-  );
-
-  const filled = Math.max(1, Math.min(10, Math.round(story.impact)));
-  const btc = market?.coins.find((coin) => coin.symbol === "BTC");
-  const eth = market?.coins.find((coin) => coin.symbol === "ETH");
-  const sol = market?.coins.find((coin) => coin.symbol === "SOL");
-
-  return (
-    <section className="shell section" id="impact">
-      <div className="sectiontitle"><div><div className="label">Priority feed</div><h2>High Impact</h2></div><span className="sub">{status}</span></div>
-
-      <div className="grid">
-        <article className="card impact">
-          <div className="impacttop"><span className={`badge ${story.impact >= 8 ? "badge-hot" : ""}`}>HIGH IMPACT · {story.urgency}</span></div>
-          <div className="impactmeter" aria-label={`Impact ${story.impact} out of 10`}>{Array.from({ length: 10 }, (_, i) => <span key={i} className={`impactsegment ${i < filled ? "active" : ""}`} />)}</div>
-          <div className="impactscoreline"><strong>{story.impact.toFixed(1)} / 10</strong><span>{story.direction}</span></div>
-          <div className="impactscale"><span>1</span><span>3</span><span>5</span><span>7</span><span>10</span></div>
-          <h3>{story.title}</h3>
-          <p className="muted">{story.why}</p>
-          <div className="meta"><span className="chip">{story.tag}</span><span className="chip">{story.affected.join(" · ")}</span><span className="chip">{story.source}</span></div>
-          <div className="window"><span className="label">Impact window</span><div className="bar"><div className="fill" style={{ width: `${Math.min(100, story.impact * 10)}%` }} /></div><div className="windowline"><span>{ageLabel(story.publishedAt)} old</span><span>{story.window} · {story.urgency}</span></div></div>
-        </article>
-
-        <article className="card">
-          <div className="label">Market impact</div>
-          <h3>{story.direction} context.</h3>
-          <div className="detailgrid">
-            {btc && <div className="detail"><span>BTC</span><b>{price(btc.price)} / {btc.change >= 0 ? "+" : ""}{btc.change.toFixed(1)}% <i className={`signal-dot ${signal(btc.change)}`} /></b></div>}
-            {eth && <div className="detail"><span>ETH</span><b>{price(eth.price)} / {eth.change >= 0 ? "+" : ""}{eth.change.toFixed(1)}% <i className={`signal-dot ${signal(eth.change)}`} /></b></div>}
-            {sol && <div className="detail"><span>SOL</span><b>{price(sol.price)} / {sol.change >= 0 ? "+" : ""}{sol.change.toFixed(1)}% <i className={`signal-dot ${signal(sol.change)}`} /></b></div>}
-            {market && <div className="detail"><span>TOTAL2</span><b>{market.total2Change >= 0 ? "+" : ""}{market.total2Change.toFixed(1)}% <i className={`signal-dot ${signal(market.total2Change)}`} /></b></div>}
-            {market && <div className="detail"><span>TOTAL3</span><b>{market.total3Change >= 0 ? "+" : ""}{market.total3Change.toFixed(1)}% <i className={`signal-dot ${signal(market.total3Change)}`} /></b></div>}
-          </div>
-          <div className="meta"><span className="chip">Confidence {story.confidence}%</span><span className="chip">Event age {ageLabel(story.publishedAt)}</span></div>
-        </article>
-      </div>
-
-      <div className="highdetail">
-        <article className="card actionbox">
-          <div className="label">Trader guidance</div>
-          <h3>What to do</h3>
-          <div className="actionlist">
-            <div className="actionrow"><strong>01</strong><span>{story.whatToDo}</span></div>
-            <div className="actionrow"><strong>02</strong><span>Wait for price confirmation. A high-impact event is context, not an automatic entry.</span></div>
-            <div className="actionrow"><strong>03</strong><span>Use BTC → ETH → SOL → TOTAL3 confirmation before increasing high-beta exposure.</span></div>
-            <div className="actionrow"><strong>04</strong><span><strong>Watch:</strong> {story.whatToWatch.join(" · ")}</span></div>
-          </div>
-          <div className="dont"><strong>AVOID:</strong> {story.avoid}</div>
-        </article>
-
-        <article className="card">
-          <div className="label">Decision frame</div>
-          <h3>What changes the read?</h3>
-          <div className="actionlist">
-            <div className="actionrow"><strong>🟢</strong><span><strong>Recovery:</strong> {story.whatToWatch[0] ?? "Breadth improves"} + leverage pressure fades → look for confirmation.</span></div>
-            <div className="actionrow"><strong>🔴</strong><span><strong>Continuation:</strong> {story.invalidation} → reduce risk / no new high-beta exposure.</span></div>
-          </div>
-          <div className="meta"><span className="chip">Source: {story.source}</span><a className="chip" href={story.link} target="_blank" rel="noreferrer">Read source ↗</a></div>
-        </article>
-      </div>
-
-      <div className="card" style={{ marginTop: 16 }}>
-        <div className="label">One-line read</div>
-        <p className="muted" style={{ margin: "10px 0 0", fontSize: 18, lineHeight: 1.6 }}>{story.why} Until the market confirms, protect capital and wait.</p>
-      </div>
-    </section>
-  );
-}
+function VexStyles(){return <style jsx global>{`.vex-impact{max-width:1180px!important}.vex-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px}.vex-head h2{font-size:30px!important;letter-spacing:-.05em}.vex-head span{color:#77746d;font-size:12px}.vex-kicker{color:#8b877f;font-size:10px;font-weight:800;letter-spacing:.18em;margin-bottom:4px}.vex-hero{border:1px solid #282722;background:#050505;border-radius:18px;padding:30px 34px 28px;position:relative;overflow:hidden}.vex-hero:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#e36f6f}.vex-alert{font-size:17px;font-weight:800;margin-bottom:20px}.vex-hero h1{font-family:Inter,system-ui,sans-serif;font-size:clamp(31px,4vw,48px);line-height:1.08;letter-spacing:-.055em;max-width:980px;margin:0 0 34px;white-space:normal}.vex-metrics{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #292824;border-bottom:1px solid #292824;margin:0 0 28px}.vex-metrics>div{padding:18px 14px 18px 0}.vex-metrics small{display:block;color:#9a968d;font-size:11px;font-weight:700;margin-bottom:9px}.vex-metrics strong{font-size:16px;white-space:nowrap}.vex-dot,.vex-big-dot{display:inline-block;width:13px;height:13px;border-radius:50%;background:#d9bd73;vertical-align:-1px;margin-right:6px}.vex-dot.green,.vex-big-dot.green{background:#0bd43c}.vex-dot.orange{background:#ff9800}.vex-dot.red,.vex-big-dot.red{background:#e11}.vex-dot.yellow,.vex-big-dot.yellow{background:#ffd400}.vex-event{font-size:15px;line-height:1.6;color:#dedbd4;margin-bottom:36px}.vex-event p{margin:4px 0}.vex-event b{color:#fff}.vex-section-title{font-size:18px;font-weight:800;margin:32px 0 18px}.vex-windowbar{display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:600px;height:24px;margin-bottom:10px}.vex-windowbar span{border:1px solid #77746d;background:#f4f2eb}.vex-windowbar span:not(.active){background:#22211e;border-color:#3b3933}.vex-windowline{display:flex;justify-content:space-between;max-width:600px;font-size:15px}.vex-windowline span{color:#0bd43c;font-weight:800}.vex-windowmeta{display:flex;gap:28px;color:#aaa69d;font-size:12px;margin-top:18px;flex-wrap:wrap}.vex-block{padding:8px 0 0}.vex-bullets{margin:0;padding-left:27px;max-width:1030px}.vex-bullets li{font-size:18px;line-height:1.55;margin:11px 0;padding-left:5px}.vex-readouts{margin-top:28px;font-size:17px;line-height:1.7}.vex-readouts>div{margin:5px 0}.vex-readouts span{font-weight:800}.green-text{color:#0bd43c}.orange-text{color:#ff9800}.yellow-text{color:#ffd400}.vex-table{border-top:1px solid #2a2925;overflow-x:auto}.vex-tr{display:grid;grid-template-columns:1fr 1.5fr 1.25fr;min-width:760px;border-bottom:1px solid #24231f;padding:15px 0;gap:24px;font-size:15px;line-height:1.45}.vex-th{color:#9a968d;font-weight:700}.vex-tr b{color:#fff}.vex-final{padding-bottom:25px}.vex-final h3{font-size:25px;margin:8px 0 28px;letter-spacing:-.03em}.vex-big-dot{width:22px;height:22px;margin-right:8px}.vex-label{font-size:17px;font-weight:800;margin:0 0 6px}.vex-entry{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:17px;line-height:1.7;margin:0 0 22px;color:#f0ede5}.vex-avoid{font-size:17px;line-height:1.55;margin:0 0 28px}.vex-scenario{border-left:3px solid #0bd43c;padding:14px 18px;margin:18px 0;background:#0a0d0a}.vex-scenario.red-case{border-color:#e11;background:#0d0909}.vex-scenario span{font-size:18px;font-weight:800}.vex-scenario p{font-size:16px;line-height:1.55;margin:8px 0 10px}.vex-scenario b{font-size:16px}.vex-one-line{border-top:1px solid #292824;margin-top:18px;padding-top:22px}.vex-one-line>span{font-size:16px;font-weight:800}.vex-one-line p{font-size:18px;line-height:1.6;margin:9px 0}.vex-source{font-size:11px;color:#77746d}.vex-source a{color:#aaa69d;text-decoration:underline}.vex-empty{border:1px solid #292824;border-radius:16px;padding:28px;color:#8e8a82;font-size:14px}@media(max-width:700px){.vex-hero{padding:24px 18px}.vex-hero h1{font-size:30px;margin-bottom:25px}.vex-metrics{grid-template-columns:repeat(2,1fr)}.vex-metrics>div{padding:14px 8px 14px 0}.vex-metrics strong{font-size:13px}.vex-event{font-size:14px}.vex-section-title{font-size:17px}.vex-bullets li{font-size:16px}.vex-readouts{font-size:15px}.vex-entry{font-size:14px}.vex-final h3{font-size:21px}.vex-scenario p,.vex-scenario b{font-size:14px}.vex-one-line p{font-size:16px}}`}</style>}
