@@ -1,3 +1,5 @@
+import TradingViewChart from "./components/TradingViewChart";
+
 const sectors = [
   ["🥇", "Memecoins", "Rotation developing", "+12.4%"],
   ["🥈", "AI / Compute", "Breadth expanding", "+8.7%"],
@@ -17,7 +19,7 @@ export default function Home() {
       <header className="shell nav">
         <a className="brand" href="#top">REVE<span>EDGE</span></a>
         <nav className="navlinks">
-          <a href="#market">Market</a><a href="#impact">High Impact</a><a href="#sectors">Sectors</a><a href="#news">News</a><a href="#pro">Pricing</a>
+          <a href="#market">Market</a><a href="#impact">High Impact</a><a href="#charts">Charts</a><a href="#sectors">Sectors</a><a href="#news">News</a><a href="#pro">Pricing</a>
         </nav>
         <div className="navright"><span className="lang">EN / ID</span><a className="sign" href="#pro">Sign in</a><button className="probtn">Go Pro</button></div>
       </header>
@@ -52,6 +54,8 @@ export default function Home() {
           <div className="card"><div className="label">Why it matters</div><h3>Liquidity first.</h3><p className="muted">BTC sets the weather. ETH and SOL confirm whether the move is broadening. High-beta sectors react next.</p><div className="meta"><span className="chip">BTC → ETH → SOL</span><span className="chip">Watch breadth</span></div></div>
         </div>
       </section>
+
+      <TradingViewChart />
 
       <section className="shell section" id="sectors">
         <div className="sectiontitle"><div><div className="label">Capital rotation</div><h2>Top 3 Sectors</h2></div><span className="sub">Breadth + volume + relative strength</span></div>
