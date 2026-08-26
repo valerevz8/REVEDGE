@@ -40,12 +40,12 @@ function score(text: string, source: string) {
   const majorCatalyst = ["etf", "sec", "approval", "approved", "regulation", "lawsuit", "liquidation", "liquidations", "outflow", "inflow", "institutional", "tariff", "treasury", "liquidity"];
   const marketMove = ["surge", "soar", "rally", "sell-off", "crash", "collapse", "breakout", "breaks above", "breaks below", "record", "all-time high"];
   const magnitude = ["billion", "$1b", "$2b", "$3b", "$500m", "$400m", "$300m", "largest", "massive", "record"];
-  for (const word of systemic) if (x.includes(word)) v += 2.0;
-  for (const word of majorCatalyst) if (x.includes(word)) v += 1.0;
-  for (const word of marketMove) if (x.includes(word)) v += 0.7;
-  for (const word of magnitude) if (x.includes(word)) v += 0.7;
-  if (source === "CoinDesk") v += 0.35;
-  if (source === "Cointelegraph") v += 0.2;
+  for (const word of systemic) if (x.includes(word)) v += 2;
+  for (const word of majorCatalyst) if (x.includes(word)) v += 1;
+  for (const word of marketMove) if (x.includes(word)) v += .7;
+  for (const word of magnitude) if (x.includes(word)) v += .7;
+  if (source === "CoinDesk") v += .35;
+  if (source === "Cointelegraph") v += .2;
   return Math.max(1, Math.min(10, Math.round(v * 10) / 10));
 }
 
@@ -72,36 +72,63 @@ function windowFor(impact: number) {
 
 function urgencyFor(impact: number, iso: string): "NOW" | "WATCH" {
   const age = Date.now() - new Date(iso).getTime();
-  if (impact >= 8 && age < 6 * 60 * 60 * 1000) return "NOW";
-  return "WATCH";
+  return impact >= 8 && age < 6 * 60 * 60 * 1000 ? "NOW" : "WATCH";
+}
+
+function regimeFor(tag: string, d: string) {
+  if (d === "Risk-off") return "Cautious";
+  if (d === "Risk-on") return "Risk-On";
+  if (tag === "MACRO") return "Cautious";
+  return "Mixed";
+}
+
+function biasFor(d: string, tag: string) {
+  if (d === "Risk-off") return "Bearish";
+  if (d === "Risk-on") return "Bullish";
+  return tag === "MACRO" ? "Neutral" : "Wait for confirmation";
+}
+
+function sharpHeadline(tag: string, d: string, title: string) {
+  const x = title.toLowerCase();
+  if (tag === "MACRO" && /pce/.test(x)) return d === "Risk-off" ? "HOTTER PCE → BTC BREAKOUT FACES MACRO HEADWIND" : "PCE → BTC REACTION NOW SETS THE NEXT MOVE";
+  if (tag === "MACRO") return d === "Risk-off" ? "MACRO SHOCK → BTC UPSIDE NOW NEEDS REAL ABSORPTION" : "MACRO CATALYST → BTC MUST CONFIRM BEFORE RISK EXPANDS";
+  if (tag === "BTC") return d === "Risk-off" ? "BTC CATALYST → BREAKOUT STRUCTURE UNDER PRESSURE" : "BTC CATALYST → BREAKOUT NEEDS FOLLOW-THROUGH";
+  if (tag === "ETH") return d === "Risk-off" ? "ETH CATALYST → ALT RISK REMAINS VULNERABLE" : "ETH CATALYST → ALT ROTATION NEEDS CONFIRMATION";
+  if (tag === "SOL" || tag === "MEME") return d === "Risk-off" ? "HIGH-BETA SHOCK → SOL / MEME RISK STAYS FRAGILE" : "HIGH-BETA CATALYST → SOL / MEME ROTATION IN PLAY";
+  return d === "Risk-off" ? "CRYPTO CATALYST → RISK REPRICING TAKES PRIORITY" : "CRYPTO CATALYST → PRICE CONFIRMATION IS THE TRADE";
 }
 
 function whyFor(tag: string, d: string) {
-  if (tag === "MACRO") return `This macro catalyst can change liquidity and rate expectations across crypto. ${d} risk needs confirmation from BTC and broader breadth.`;
-  if (tag === "BTC") return `BTC is the primary market driver. This event can propagate through ETH, SOL and high-beta alts, so the tradeable question is whether price confirms the headline.`;
-  if (tag === "ETH") return `ETH is a key confirmation layer for alt participation. The important read is whether ETH strength or weakness spreads into SOL and broader alts.`;
-  if (tag === "SOL" || tag === "MEME") return `High-beta assets can amplify both directions. The event matters because it can change risk appetite, but sector confirmation should come before chasing.`;
-  return `This is a genuine crypto trading catalyst with potential market consequences. Price and breadth confirmation still determine whether it becomes actionable.`;
+  if (tag === "MACRO") return d === "Risk-off" ? ["The catalyst changes liquidity or rate expectations across crypto.", "The bearish signal matters most when BTC is already extended or below a key breakout level.", "Core price reaction matters more than the headline after the first volatility burst."] : ["The catalyst can shift liquidity and rate expectations across crypto.", "BTC is the first confirmation layer; alts only matter after BTC absorbs the event.", "The trade is the reaction, not the headline itself."];
+  if (tag === "BTC") return ["BTC is the primary market driver and can transmit the catalyst into ETH, SOL and alts.", "A headline without price confirmation is information, not a setup.", "Follow-through and breadth decide whether the move is real."];
+  if (tag === "ETH") return ["ETH is a key confirmation layer for alt participation.", "Strength that fails to spread into SOL / broader breadth is weak rotation.", "The setup improves only when relative strength survives the first reaction."];
+  return ["This catalyst can move risk appetite beyond the directly affected asset.", "High-beta names amplify both upside and downside when liquidity shifts.", "Price and breadth confirmation determine whether it becomes actionable."];
 }
 
 function guidanceFor(tag: string, d: string) {
   if (d === "Risk-off") return {
-    whatToDo: "Reduce new high-beta exposure and wait for BTC/breadth to stabilize before looking for a long.",
-    avoid: "Catching falling high-beta assets while the catalyst is still repricing the market.",
-    watch: ["BTC stabilization", "TOTAL3 breadth", "liquidation pressure fading"],
-    invalidation: "BTC/breadth continue lower and liquidation pressure accelerates.",
-  };
-  if (tag === "MACRO") return {
-    whatToDo: "Wait for BTC to confirm the macro reaction; do not trade the macro headline in isolation.",
-    avoid: "Taking directional exposure before rate expectations and price reaction settle.",
-    watch: ["BTC reaction", "TOTAL3 breadth", "DXY / yields reaction"],
-    invalidation: "BTC loses structure while breadth contracts.",
+    narrative: "Macro caution",
+    setup: "WAIT FOR POST-EVENT PRICE ACTION",
+    whatToDo: "Reduce new high-beta exposure and wait for BTC / breadth to stabilize.",
+    avoid: "Blind longs immediately after the print or headline.",
+    watch: ["BTC", "ETH", "SOL", "USD / Yields"],
+    triggers: ["Reclaim key BTC level + hold", "Reclaim key ETH level + outperform BTC", "Reclaim key SOL level", "USD / yields reverse lower after catalyst"],
+    invalidations: ["Lose key BTC support", "Continued ETH underperformance", "Sustained SOL weakness", "USD / yields continue higher"],
+    final: "REDUCE RISK / NO NEW LONGS",
+    bull: "BTC holds support + reclaims the breakout level + ETH/SOL strengthen",
+    bear: "BTC loses support + USD/yields stay firm + breadth contracts",
   };
   return {
-    whatToDo: "Let BTC → ETH → SOL → TOTAL3 confirm before increasing risk; strongest relative strength gets priority.",
-    avoid: "Chasing the first candle or buying high-beta laggards simply because the headline is bullish.",
-    watch: ["BTC confirmation", "SOL/ETH strength", "TOTAL3 expansion"],
-    invalidation: "BTC fails the move and broader breadth does not follow.",
+    narrative: d === "Risk-on" ? "Risk-on rotation" : "Wait for confirmation",
+    setup: "WAIT FOR PRICE + BREADTH CONFIRMATION",
+    whatToDo: "Let BTC → ETH → SOL → TOTAL3 confirm before increasing risk.",
+    avoid: "Chasing the first candle or buying laggards because the headline looks bullish.",
+    watch: ["BTC", "ETH", "SOL", "TOTAL2 / TOTAL3"],
+    triggers: ["BTC breaks and holds catalyst level", "ETH outperforms BTC", "SOL confirms risk appetite", "TOTAL3 breadth expands"],
+    invalidations: ["BTC fails the breakout", "ETH loses relative strength", "SOL remains weak", "Breadth contracts"],
+    final: "TRADE THE CONFIRMATION",
+    bull: "BTC holds the move + ETH/SOL confirm + breadth expands",
+    bear: "BTC rejects + ETH/SOL lag + breadth fails to follow",
   };
 }
 
@@ -125,14 +152,20 @@ function extractItems(xml: string, source: string) {
       urgency: urgencyFor(impact, publishedAt), window: windowFor(impact),
       confidence: Math.min(96, 68 + Math.round(impact * 2) + (source === "CoinDesk" ? 7 : source === "Cointelegraph" ? 4 : 2)),
       affected: affected(tag), why: whyFor(tag, dir),
-      whatToDo: guidance.whatToDo, avoid: guidance.avoid, whatToWatch: guidance.watch, invalidation: guidance.invalidation,
+      whatToDo: guidance.whatToDo, avoid: guidance.avoid, whatToWatch: guidance.watch,
+      invalidation: guidance.invalidations[0],
+      regime: regimeFor(tag, dir), bias: biasFor(dir, tag),
+      sharpHeadline: sharpHeadline(tag, dir, title), narrative: guidance.narrative,
+      tradableSetup: guidance.setup, finalAction: guidance.final,
+      triggerRows: guidance.triggers.map((trigger, i) => ({ watch: guidance.watch[i], trigger, invalidation: guidance.invalidations[i] })),
+      bullCase: guidance.bull, bearCase: guidance.bear,
     };
   }).filter(Boolean) as Array<any>;
 }
 
 export async function GET() {
   const responses = await Promise.allSettled(FEEDS.map(async (feed) => {
-    const r = await fetch(feed.url, { headers: { "User-Agent": "REVEDGE/0.2 (+https://revedge.netlify.app)" }, next: { revalidate: 60 } });
+    const r = await fetch(feed.url, { headers: { "User-Agent": "REVEDGE/0.3 (+https://revedge.netlify.app)" }, next: { revalidate: 60 } });
     if (!r.ok) throw 0;
     return extractItems(await r.text(), feed.name);
   }));
