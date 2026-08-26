@@ -86,7 +86,7 @@ export default function TradingViewChart() {
           ))}
         </div>
         <div className="chartwrap">
-          <div ref={containerRef} className="chartembed" />
+          <div ref={containerRef} className="chartembed" style={{ width: "100%", height: "100%" }} />
         </div>
       </div>
     </section>
