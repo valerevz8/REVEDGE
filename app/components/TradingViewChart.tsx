@@ -28,6 +28,8 @@ export default function TradingViewChart() {
       if (!tv || !containerRef.current) return;
       containerRef.current.innerHTML = "";
       const holder = document.createElement("div");
+      const holderId = `revedge-tv-${active.label.toLowerCase()}`;
+      holder.id = holderId;
       holder.style.width = "100%";
       holder.style.height = "100%";
       containerRef.current.appendChild(holder);
@@ -50,7 +52,7 @@ export default function TradingViewChart() {
         studies: [],
         backgroundColor: "#0d0d0b",
         gridColor: "rgba(128,98,59,0.10)",
-        container: holder,
+        container_id: holderId,
       });
     };
 
