@@ -17,7 +17,7 @@ export default function Home() {
   return (
     <main>
       <header className="shell nav">
-        <a className="brand" href="#top">REVE<span>EDGE</span></a>
+        <a className="brand" href="#top">REVEDGE</a>
         <nav className="navlinks">
           <a href="#market">Market</a><a href="#impact">High Impact</a><a href="#charts">Charts</a><a href="#sectors">Sectors</a><a href="#news">News</a><a href="#pro">Pricing</a>
         </nav>
@@ -52,6 +52,36 @@ export default function Home() {
             <div className="window"><span className="label">Impact window</span><div className="bar"><div className="fill" /></div><div className="windowline"><span>████████░░</span><span>6–24H · ACTIVE</span></div></div>
           </article>
           <div className="card"><div className="label">Why it matters</div><h3>Liquidity first.</h3><p className="muted">BTC sets the weather. ETH and SOL confirm whether the move is broadening. High-beta sectors react next.</p><div className="meta"><span className="chip">BTC → ETH → SOL</span><span className="chip">Watch breadth</span></div></div>
+        </div>
+
+        <div className="highdetail">
+          <article className="card">
+            <div className="label">Impact intelligence</div>
+            <div className="detailgrid">
+              <div className="detail"><span>Event age</span><b>2H 14M</b></div>
+              <div className="detail"><span>Confidence</span><b>92%</b></div>
+              <div className="detail"><span>Market impact</span><b>9 / 10</b></div>
+              <div className="detail"><span>Urgency</span><b>NOW</b></div>
+              <div className="detail"><span>Direction</span><b className="direction">Risk-off risk</b></div>
+              <div className="detail"><span>Window</span><b>6–24H</b></div>
+              <div className="detail"><span>Primary driver</span><b>BTC / Liquidity</b></div>
+              <div className="detail"><span>Second-order</span><b>ETH → SOL → Alts</b></div>
+            </div>
+            <div className="meta"><span className="chip">Source: Macro / official release</span><span className="chip">Status: ACTIVE</span><span className="chip">Last reviewed: 10:42</span></div>
+          </article>
+
+          <article className="card actionbox">
+            <div className="label">Trader guidance</div>
+            <h3>What to do</h3>
+            <div className="actionlist">
+              <div className="actionrow"><strong>01</strong><span>Wait for the first volatility spike to settle. Do not chase the headline candle.</span></div>
+              <div className="actionrow"><strong>02</strong><span>Use <strong>BTC → ETH → SOL</strong> confirmation before increasing alt exposure.</span></div>
+              <div className="actionrow"><strong>03</strong><span>For longs: tighten invalidation or reduce size if breadth contracts while BTC weakens.</span></div>
+              <div className="actionrow"><strong>04</strong><span>For shorts: avoid fighting a confirmed BTC/ETH/SOL reversal; wait for failed reclaim or renewed weakness.</span></div>
+              <div className="actionrow"><strong>05</strong><span>Re-check Meme Radar only after the broader market direction is confirmed.</span></div>
+            </div>
+            <div className="dont"><strong>DON'T:</strong> trade simply because the news is P9. P9 means the event matters — not that a trade is automatically valid.</div>
+          </article>
         </div>
       </section>
 
