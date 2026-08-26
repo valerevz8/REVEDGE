@@ -1,4 +1,69 @@
 "use client";
-import { useEffect,useState } from "react";
-type Sector={name:string;change:number;breadth:number;leaders:Array<{symbol:string;change:number}>}; type Data={sectors:Sector[];meme:{breadth:number;leaders:Array<{symbol:string;change:number}>}};
-export default function SectorRadar(){ const [data,setData]=useState<Data|null>(null); useEffect(()=>{let on=true;const load=async()=>{try{const r=await fetch("/api/sectors",{cache:"no-store"});if(!r.ok)throw 0;const d=await r.json();if(on)setData(d);}catch{}};load();const t=setInterval(load,30000);return()=>{on=false;clearInterval(t)}},[]); if(!data)return <><section className="shell section"><div className="sectiontitle"><div><div className="label">Capital rotation</div><h2>Top 3 Sectors</h2></div><span className="sub">Loading live rotation…</span></div><div className="card newsempty">Loading live sector data…</div></section><section className="shell section"><div className="sectiontitle"><div><div className="label">High-beta radar</div><h2>🪙 Meme Radar</h2></div></div><div className="card newsempty">Loading live meme data…</div></section></>; return <><section className="shell section" id="sectors"><div className="sectiontitle"><div><div className="label">Capital rotation</div><h2>Top 3 Sectors</h2></div><span className="sub">Live · 30s · breadth + relative strength</span></div><div className="sectors card">{data.sectors.map((s,i)=><div className="sector" key={s.name}><span className="rank">0{i+1}</span><div><b>{s.name}</b><small>Breadth {s.breadth}% · Leaders {s.leaders.map(x=>x.symbol).join(", ")}</small></div><span className={s.change>=0?"gain":"loss"}>{s.change>=0?"+":""}{s.change.toFixed(2)}%</span></div>)}</div></section><section className="shell section"><div className="sectiontitle"><div><div className="label">High-beta radar</div><h2>🪙 Meme Radar</h2></div><span className="sub">Live · 30s · {data.meme.breadth}% breadth</span></div><div className="card"><div className="meta" style={{marginTop:0}}><span className="chip">MEME BREADTH {data.meme.breadth}%</span><span className="chip">Live Binance spot data</span></div><div className="sectors" style={{marginTop:14}}>{data.meme.leaders.map(x=><div className="sector" key={x.symbol}><b>{x.symbol}</b><span className="muted">24h move</span><span className={x.change>=0?"gain":"loss"}>{x.change>=0?"+":""}{x.change.toFixed(2)}%</span></div>)}</div></div></section></> }
+
+import { useEffect, useState } from "react";
+
+type Row = { symbol: string; change: number };
+type Sector = { name: string; change: number; breadth: number; leaders: Row[] };
+type Data = { sectors: Sector[]; meme: { breadth: number; leaders: Row[] }; source?: string };
+
+export default function SectorRadar() {
+  const [data, setData] = useState<Data | null>(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        const response = await fetch("/api/sectors", { cache: "no-store" });
+        if (!response.ok) throw new Error("unavailable");
+        const next = await response.json();
+        if (mounted) { setData(next); setError(false); }
+      } catch {
+        if (mounted) setError(true);
+      }
+    };
+    load();
+    const timer = setInterval(load, 60000);
+    return () => { mounted = false; clearInterval(timer); };
+  }, []);
+
+  if (!data) return (
+    <>
+      <section className="shell section" id="sectors">
+        <div className="sectiontitle"><div><div className="label">Capital rotation</div><h2>Top 3 Sectors</h2></div><span className="sub">{error ? "Live data unavailable · retrying" : "Loading live rotation…"}</span></div>
+        <div className="card newsempty">{error ? "REVEDGE could not reach the market data provider. Retrying automatically." : "Loading live sector data…"}</div>
+      </section>
+      <section className="shell section">
+        <div className="sectiontitle"><div><div className="label">High-beta radar</div><h2>Meme Radar</h2></div><span className="sub">Live market data</span></div>
+        <div className="card newsempty">Loading live meme data…</div>
+      </section>
+    </>
+  );
+
+  return (
+    <>
+      <section className="shell section" id="sectors">
+        <div className="sectiontitle"><div><div className="label">Capital rotation</div><h2>Top 3 Sectors</h2></div><span className="sub">Live · 60s · breadth + relative strength</span></div>
+        <div className="sectors card">
+          {data.sectors.map((sector, index) => (
+            <div className="sector" key={sector.name}>
+              <span className="rank">0{index + 1}</span>
+              <div><b>{sector.name}</b><small>Breadth {sector.breadth}% · Leaders {sector.leaders.map((x) => x.symbol).join(", ")}</small></div>
+              <span className={sector.change >= 0 ? "gain" : "loss"}>{sector.change >= 0 ? "+" : ""}{sector.change.toFixed(2)}%</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="shell section">
+        <div className="sectiontitle"><div><div className="label">High-beta radar</div><h2>Meme Radar</h2></div><span className="sub">Live · 60s · {data.meme.breadth}% breadth</span></div>
+        <div className="card">
+          <div className="meta" style={{ marginTop: 0 }}><span className="chip">MEME BREADTH {data.meme.breadth}%</span><span className="chip">Live market data</span></div>
+          <div className="sectors" style={{ marginTop: 14 }}>
+            {data.meme.leaders.map((row) => <div className="sector" key={row.symbol}><b>{row.symbol}</b><span className="muted">24h move</span><span className={row.change >= 0 ? "gain" : "loss"}>{row.change >= 0 ? "+" : ""}{row.change.toFixed(2)}%</span></div>)}
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
