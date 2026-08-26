@@ -8,7 +8,7 @@ const FEEDS = [
 ];
 
 function clean(v: string) {
-  return v.replace(/<!\[CDATA\[|\]\]>/g, "").replace(/<[^>]+>/g, " ").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&apos;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">\").replace(/\s+/g, " ").trim();
+  return v.replace(/<!\[CDATA\[|\]\]>/g, "").replace(/<[^>]+>/g, " ").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&apos;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/\s+/g, " ").trim();
 }
 
 function tagFor(text: string) {
@@ -36,17 +36,10 @@ function isTradingRelevant(text: string) {
 function score(text: string, source: string) {
   const x = text.toLowerCase();
   let v = 4;
-  const systemic = [
-    "hack", "exploit", "collapse", "emergency", "stablecoin depeg", "bankruptcy", "exchange failure",
-    "war", "sanction", "ban", "sec lawsuit", "cftc", "fed", "fomc", "cpi", "pce",
-  ];
-  const majorCatalyst = [
-    "etf", "sec", "approval", "approved", "regulation", "lawsuit", "liquidation", "liquidations",
-    "outflow", "inflow", "institutional", "tariff", "treasury", "liquidity",
-  ];
+  const systemic = ["hack", "exploit", "collapse", "emergency", "stablecoin depeg", "bankruptcy", "exchange failure", "war", "sanction", "ban", "sec lawsuit", "cftc", "fed", "fomc", "cpi", "pce"];
+  const majorCatalyst = ["etf", "sec", "approval", "approved", "regulation", "lawsuit", "liquidation", "liquidations", "outflow", "inflow", "institutional", "tariff", "treasury", "liquidity"];
   const marketMove = ["surge", "soar", "rally", "sell-off", "crash", "collapse", "breakout", "breaks above", "breaks below", "record", "all-time high"];
   const magnitude = ["billion", "$1b", "$2b", "$3b", "$500m", "$400m", "$300m", "largest", "massive", "record"];
-
   for (const word of systemic) if (x.includes(word)) v += 2.0;
   for (const word of majorCatalyst) if (x.includes(word)) v += 1.0;
   for (const word of marketMove) if (x.includes(word)) v += 0.7;
@@ -120,51 +113,32 @@ function extractItems(xml: string, source: string) {
     const published = clean(block.match(/<(?:pubDate|published|updated)[^>]*>([\s\S]*?)<\/(?:pubDate|published|updated)>/i)?.[1] ?? "");
     const description = clean(block.match(/<(?:description|content:encoded)[^>]*>([\s\S]*?)<\/(?:description|content:encoded)>/i)?.[1] ?? "");
     if (!title || !link || !published) return null;
-
     const publishedAt = new Date(published).toISOString();
     const fullText = `${title} ${description}`;
     if (!isTradingRelevant(fullText)) return null;
-
     const tag = tagFor(fullText);
     const impact = score(fullText, source);
     const dir = direction(fullText);
     const guidance = guidanceFor(tag, dir);
-
     return {
-      title,
-      link,
-      source,
-      publishedAt,
-      impact,
-      tag,
-      direction: dir,
-      urgency: urgencyFor(impact, publishedAt),
-      window: windowFor(impact),
+      title, link, source, publishedAt, impact, tag, direction: dir,
+      urgency: urgencyFor(impact, publishedAt), window: windowFor(impact),
       confidence: Math.min(96, 68 + Math.round(impact * 2) + (source === "CoinDesk" ? 7 : source === "Cointelegraph" ? 4 : 2)),
-      affected: affected(tag),
-      why: whyFor(tag, dir),
-      whatToDo: guidance.whatToDo,
-      avoid: guidance.avoid,
-      whatToWatch: guidance.watch,
-      invalidation: guidance.invalidation,
+      affected: affected(tag), why: whyFor(tag, dir),
+      whatToDo: guidance.whatToDo, avoid: guidance.avoid, whatToWatch: guidance.watch, invalidation: guidance.invalidation,
     };
   }).filter(Boolean) as Array<any>;
 }
 
 export async function GET() {
   const responses = await Promise.allSettled(FEEDS.map(async (feed) => {
-    const r = await fetch(feed.url, {
-      headers: { "User-Agent": "REVEDGE/0.2 (+https://revedge.netlify.app)" },
-      next: { revalidate: 60 },
-    });
+    const r = await fetch(feed.url, { headers: { "User-Agent": "REVEDGE/0.2 (+https://revedge.netlify.app)" }, next: { revalidate: 60 } });
     if (!r.ok) throw 0;
     return extractItems(await r.text(), feed.name);
   }));
-
   const stories = responses.flatMap((r) => r.status === "fulfilled" ? r.value : []);
   const unique = new Map<string, any>();
   for (const story of stories) unique.set(story.title.toLowerCase(), story);
-
   const curated = [...unique.values()]
     .filter((story) => {
       const age = Date.now() - new Date(story.publishedAt).getTime();
@@ -172,9 +146,5 @@ export async function GET() {
     })
     .sort((a, b) => (b.impact - a.impact) || (new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()))
     .slice(0, 3);
-
-  return NextResponse.json(
-    { stories: curated, sources: FEEDS.map((feed) => feed.name), updatedAt: new Date().toISOString() },
-    { headers: { "Cache-Control": "s-maxage=60, stale-while-revalidate=120" } },
-  );
+  return NextResponse.json({ stories: curated, sources: FEEDS.map((feed) => feed.name), updatedAt: new Date().toISOString() }, { headers: { "Cache-Control": "s-maxage=60, stale-while-revalidate=120" } });
 }
