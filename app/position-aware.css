@@ -1,0 +1,92 @@
+/* REVEDGE — Position-Aware Decision / Apple-style list treatment */
+.re-position{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:0 !important;
+  margin-top:18px !important;
+  border-top:1px solid var(--line) !important;
+  border-bottom:1px solid var(--line) !important;
+  background:transparent !important;
+}
+
+.re-position > div{
+  width:100% !important;
+  min-height:72px !important;
+  display:grid !important;
+  grid-template-columns:145px minmax(0,1fr) !important;
+  align-items:center !important;
+  gap:20px !important;
+  border:0 !important;
+  border-radius:0 !important;
+  border-bottom:1px solid var(--line) !important;
+  padding:16px 4px 16px 14px !important;
+  background:transparent !important;
+  position:relative !important;
+  overflow:visible !important;
+}
+
+.re-position > div:last-child{border-bottom:0 !important}
+.re-position > div::before{
+  content:"" !important;
+  position:absolute !important;
+  left:0 !important;
+  top:14px !important;
+  bottom:14px !important;
+  width:3px !important;
+  border-radius:99px !important;
+  background:#969696 !important;
+}
+
+/* Soft Apple-style awareness colors — deliberately muted, never neon. */
+.re-position .no-pos{
+  background:rgba(150,150,150,.045) !important;
+  border-color:transparent !important;
+}
+.re-position .no-pos::before{background:#858585 !important}
+
+.re-position .long-pos{
+  background:rgba(112,181,137,.065) !important;
+  border-color:transparent !important;
+}
+.re-position .long-pos::before{background:#78a98a !important}
+
+.re-position .short-pos{
+  background:rgba(205,113,113,.065) !important;
+  border-color:transparent !important;
+}
+.re-position .short-pos::before{background:#bd7777 !important}
+
+.re-position span{
+  display:block !important;
+  margin:0 !important;
+  color:#858178 !important;
+  font-size:9px !important;
+  line-height:1.2 !important;
+  text-transform:uppercase !important;
+  letter-spacing:.11em !important;
+  font-weight:700 !important;
+}
+
+.re-position b{
+  display:block !important;
+  margin:0 !important;
+  color:#e8e5de !important;
+  font-size:11px !important;
+  line-height:1.55 !important;
+  font-weight:600 !important;
+}
+
+.re-position > div:hover{background:rgba(255,255,255,.025) !important}
+.re-position .long-pos:hover{background:rgba(112,181,137,.09) !important}
+.re-position .short-pos:hover{background:rgba(205,113,113,.09) !important}
+
+@media(max-width:700px){
+  .re-position > div{
+    grid-template-columns:112px minmax(0,1fr) !important;
+    gap:14px !important;
+    min-height:68px !important;
+    padding:14px 4px 14px 13px !important;
+  }
+  .re-position span{font-size:8px !important}
+  .re-position b{font-size:10px !important;line-height:1.5 !important}
+}
