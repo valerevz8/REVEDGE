@@ -1,3 +1,4 @@
+import { getStore } from "@netlify/blobs";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -35,25 +36,33 @@ function lifecycle(story: any) {
   return "FADING";
 }
 
-export async function GET(request: Request) {
-  try {
-    const url = new URL(request.url);
-    const origin = url.origin;
-    const response = await fetch(`${origin}/api/news?intelligence=${Date.now()}`, {
-      cache: "no-store",
-      headers: { "Cache-Control": "no-cache" },
-    });
+async function getSnapshot() {
+  const store = getStore("revedge-intelligence");
+  const cached = await store.get("latest-news", { type: "json" });
+  if (cached) return cached as any;
 
-    if (!response.ok) {
-      return NextResponse.json({ ok: false, error: "news feed unavailable" }, { status: 503 });
+  // First-deploy safety: populate from the existing news route if the
+  // scheduled function has not executed yet.
+  const siteUrl = process.env.URL;
+  if (!siteUrl) return null;
+  const response = await fetch(`${siteUrl}/api/news?bootstrap=${Date.now()}`, {
+    cache: "no-store",
+    headers: { "Cache-Control": "no-cache" },
+  });
+  if (!response.ok) return null;
+  return await response.json();
+}
+
+export async function GET() {
+  try {
+    const data = await getSnapshot();
+    if (!data) {
+      return NextResponse.json({ ok: false, error: "intelligence snapshot unavailable" }, { status: 503 });
     }
 
-    const data = await response.json();
     const stories = Array.isArray(data.stories) ? data.stories : [];
-
-    // Collapse near-duplicate headlines from different publishers so one real-world
-    // event is treated as one catalyst instead of five separate alerts.
     const groups: any[] = [];
+
     for (const story of stories) {
       const match = groups.find((group) => similarity(group.primary.title, story.title) >= 0.55);
       if (match) {
@@ -86,7 +95,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      generatedAt: new Date().toISOString(),
+      generatedAt: data.refreshedAt ?? data.generatedAt ?? new Date().toISOString(),
       engine: "REVEDGE Event Intelligence v1",
       methodology: "impact × freshness × urgency + corroboration",
       activeCount: now.length,
@@ -94,9 +103,11 @@ export async function GET(request: Request) {
       events: events.slice(0, 12),
     }, {
       headers: {
-        "Cache-Control": "no-store, max-age=0",
-        "CDN-Cache-Control": "no-store",
-        "Netlify-CDN-Cache-Control": "no-store",
+        // Browser can poll quickly, while Netlify's CDN reuses the same
+        // snapshot instead of executing the function for every poll.
+        "Cache-Control": "public, max-age=0, s-maxage=15, stale-while-revalidate=30",
+        "CDN-Cache-Control": "public, max-age=15, stale-while-revalidate=30",
+        "Netlify-CDN-Cache-Control": "public, max-age=15, stale-while-revalidate=30",
       },
     });
   } catch (error) {
