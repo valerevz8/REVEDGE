@@ -1,3 +1,4 @@
+import { getStore } from "@netlify/blobs";
 import { NextResponse } from "next/server";
 
 // REVEDGE is decision-first: discover broadly, rank by impact *and* freshness,
@@ -80,7 +81,6 @@ function windowFor(impact: number) {
 function freshness(iso: string) {
   const age = Math.max(0, Date.now() - new Date(iso).getTime());
   const hours = age / 3600000;
-  // Freshness is deliberately strong: a 12h-old article must not outrank a fresh catalyst.
   if (hours <= 1) return 3;
   if (hours <= 3) return 2.2;
   if (hours <= 6) return 1.2;
@@ -177,7 +177,30 @@ function extractItems(xml: string, source: string) {
   }).filter(Boolean) as Array<any>;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const forceRefresh = url.searchParams.has("scheduled_refresh");
+
+  // Normal browser/API reads use the persistent snapshot. Only the scheduled
+  // ingestion pass is allowed to fan out to all external RSS sources.
+  if (!forceRefresh) {
+    try {
+      const store = getStore("revedge-intelligence");
+      const cached = await store.get("latest-news", { type: "json" });
+      if (cached) {
+        return NextResponse.json(cached, {
+          headers: {
+            "Cache-Control": "public, max-age=0, s-maxage=15, stale-while-revalidate=30",
+            "CDN-Cache-Control": "public, max-age=15, stale-while-revalidate=30",
+            "Netlify-CDN-Cache-Control": "public, max-age=15, stale-while-revalidate=30",
+          },
+        });
+      }
+    } catch {
+      // Bootstrap below if the persistent snapshot is not available yet.
+    }
+  }
+
   const responses = await Promise.allSettled(FEEDS.map(async (feed) => {
     const r = await fetch(feed.url, {
       headers: { "User-Agent": "REVEDGE/1.0 (+https://revedge.netlify.app)" },
@@ -200,8 +223,27 @@ export async function GET() {
     .slice(0, 5);
 
   const hasNow = curated.some((story) => story.urgency === "NOW");
-  return NextResponse.json(
-    { stories: curated, sources: FEEDS.map((feed) => feed.name), updatedAt: new Date().toISOString(), mode: hasNow ? "HIGH_ALERT" : "NORMAL" },
-    { headers: { "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate", "CDN-Cache-Control": "no-store", "Vercel-CDN-Cache-Control": "no-store" } }
-  );
+  const result = {
+    stories: curated,
+    sources: FEEDS.map((feed) => feed.name),
+    updatedAt: new Date().toISOString(),
+    mode: hasNow ? "HIGH_ALERT" : "NORMAL",
+  };
+
+  if (forceRefresh) {
+    try {
+      const store = getStore("revedge-intelligence");
+      await store.setJSON("latest-news", { ...result, refreshedAt: new Date().toISOString() });
+    } catch (error) {
+      console.error("REVEDGE snapshot write failed", error);
+    }
+  }
+
+  return NextResponse.json(result, {
+    headers: {
+      "Cache-Control": "public, max-age=0, s-maxage=15, stale-while-revalidate=30",
+      "CDN-Cache-Control": "public, max-age=15, stale-while-revalidate=30",
+      "Netlify-CDN-Cache-Control": "public, max-age=15, stale-while-revalidate=30",
+    },
+  });
 }
