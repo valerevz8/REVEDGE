@@ -3,6 +3,7 @@ import "./globals.css";
 import "./position-aware.css";
 import "./theme-preferences.css";
 import { PreferencesProvider } from "./components/Preferences";
+import LanguageCompleteness from "./components/LanguageCompleteness";
 
 export const metadata: Metadata = {
   title: "REVEDGE — See what matters. Before the noise.",
@@ -12,7 +13,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body><PreferencesProvider>{children}</PreferencesProvider></body>
+      <body>
+        <PreferencesProvider>
+          <LanguageCompleteness />
+          {children}
+        </PreferencesProvider>
+      </body>
     </html>
   );
 }
