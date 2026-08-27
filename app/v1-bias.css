@@ -2,13 +2,14 @@
 
 /* Make the first decision grid feel like a dashboard, not two equal cards. */
 @media (min-width: 901px){
-  #impact > .grid:first-of-type{
+  #impact > .grid{
     grid-template-columns:minmax(0,1.35fr) minmax(360px,1fr) !important;
     align-items:stretch !important;
   }
 }
 
-/* Directional macro panel: the whole panel carries the current market bias. */
+/* Directional macro panel: the whole panel carries the current market bias.
+   The source of truth is the Direction value in the first card of the same grid. */
 #impact > .grid .card:has(.decisioncall){
   min-height:300px !important;
   padding:24px !important;
@@ -16,23 +17,25 @@
   transition:background .2s ease,border-color .2s ease,box-shadow .2s ease !important;
 }
 
-#impact > .grid .card:has(.decisioncall):has(.direction){
-  background:rgba(227,107,107,.10) !important;
-  border-color:rgba(227,107,107,.55) !important;
-  box-shadow:inset 3px 0 0 #e36b6b !important;
+/* BEARISH */
+#impact > .grid:has(.impactscoreline .direction) .card:has(.decisioncall){
+  background:rgba(227,107,107,.12) !important;
+  border-color:rgba(227,107,107,.62) !important;
+  box-shadow:inset 4px 0 0 #e36b6b !important;
 }
 
-#impact > .grid .card:has(.decisioncall):has(.positive){
-  background:rgba(99,201,139,.10) !important;
-  border-color:rgba(99,201,139,.55) !important;
-  box-shadow:inset 3px 0 0 #63c98b !important;
+/* BULLISH */
+#impact > .grid:has(.impactscoreline .positive) .card:has(.decisioncall){
+  background:rgba(99,201,139,.12) !important;
+  border-color:rgba(99,201,139,.62) !important;
+  box-shadow:inset 4px 0 0 #63c98b !important;
 }
 
-/* Neutral/caution gets a warm yellow-orange treatment. */
-#impact > .grid .card:has(.decisioncall):not(:has(.direction)):not(:has(.positive)){
-  background:rgba(230,173,91,.10) !important;
-  border-color:rgba(230,173,91,.55) !important;
-  box-shadow:inset 3px 0 0 #e6ad5b !important;
+/* NEUTRAL / CAUTION */
+#impact > .grid:not(:has(.impactscoreline .direction)):not(:has(.impactscoreline .positive)) .card:has(.decisioncall){
+  background:rgba(230,173,91,.12) !important;
+  border-color:rgba(230,173,91,.62) !important;
+  box-shadow:inset 4px 0 0 #e6ad5b !important;
 }
 
 /* Immediate Read is the strongest callout inside the directional panel. */
@@ -40,25 +43,25 @@
   margin-top:18px !important;
 }
 
-#impact > .grid .card:has(.decisioncall):has(.direction) .decisioncall:last-child{
+#impact > .grid:has(.impactscoreline .direction) .card:has(.decisioncall) .decisioncall:last-child{
   color:#e36b6b !important;
-  border-color:rgba(227,107,107,.45) !important;
-  background:rgba(227,107,107,.08) !important;
+  border-color:rgba(227,107,107,.52) !important;
+  background:rgba(227,107,107,.10) !important;
 }
 
-#impact > .grid .card:has(.decisioncall):has(.positive) .decisioncall:last-child{
+#impact > .grid:has(.impactscoreline .positive) .card:has(.decisioncall) .decisioncall:last-child{
   color:#63c98b !important;
-  border-color:rgba(99,201,139,.45) !important;
-  background:rgba(99,201,139,.08) !important;
+  border-color:rgba(99,201,139,.52) !important;
+  background:rgba(99,201,139,.10) !important;
 }
 
-#impact > .grid .card:has(.decisioncall):not(:has(.direction)):not(:has(.positive)) .decisioncall:last-child{
+#impact > .grid:not(:has(.impactscoreline .direction)):not(:has(.impactscoreline .positive)) .card:has(.decisioncall) .decisioncall:last-child{
   color:#e6ad5b !important;
-  border-color:rgba(230,173,91,.45) !important;
-  background:rgba(230,173,91,.08) !important;
+  border-color:rgba(230,173,91,.52) !important;
+  background:rgba(230,173,91,.10) !important;
 }
 
-/* Keep the content itself readable; bias is communicated by the panel, not every word. */
+/* Keep the content readable; the panel itself carries the bias signal. */
 #impact > .grid .card:has(.decisioncall) .label,
 #impact > .grid .card:has(.decisioncall) h3,
 #impact > .grid .card:has(.decisioncall) p,
@@ -66,7 +69,7 @@
   color:inherit;
 }
 
-/* Impact Intelligence: ONLY the Direction value is directional. Everything else stays neutral. */
+/* Impact Intelligence: ONLY Direction/Risk-on/Risk-off is directional. Everything else stays neutral. */
 #impact .highdetail .detail b{
   color:#e8e5de !important;
 }
