@@ -1,6 +1,6 @@
-/* REVEDGE V1 — directional visual hierarchy */
+/* REVEDGE V2 — decision hierarchy / directional signaling */
 
-/* Make the first decision grid feel like a dashboard, not two equal cards. */
+/* Keep the primary intelligence card dominant, with a wider decision panel beside it. */
 @media (min-width: 901px){
   #impact > .grid{
     grid-template-columns:minmax(0,1.35fr) minmax(360px,1fr) !important;
@@ -8,68 +8,107 @@
   }
 }
 
-/* Directional macro panel: the whole panel carries the current market bias.
-   The source of truth is the Direction value in the first card of the same grid. */
-#impact > .grid .card:has(.decisioncall){
+/* WHY IT MATTERS stays visually neutral. The signal belongs to the dedicated Bias card. */
+#impact > .grid .card:has(.decisionstatus){
   min-height:300px !important;
   padding:24px !important;
-  border-width:1px !important;
+  background:#111110 !important;
+  border-color:var(--line) !important;
+  box-shadow:none !important;
+}
+
+/* Decision hierarchy: Bias → Market condition → Immediate read. */
+#impact .decisionstatus{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  gap:12px !important;
+  margin-top:20px !important;
+}
+
+#impact .decisionstatus .statusbox{
+  min-height:88px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  justify-content:center !important;
+  gap:8px !important;
+  padding:16px 18px !important;
+  border:1px solid var(--line) !important;
+  border-radius:12px !important;
+  background:#0f0f0e !important;
+  box-shadow:none !important;
+}
+
+#impact .decisionstatus .statusbox span{
+  display:block !important;
+  margin:0 !important;
+  color:#858178 !important;
+  font-size:9px !important;
+  line-height:1.2 !important;
+  font-weight:700 !important;
+  letter-spacing:.12em !important;
+  text-transform:uppercase !important;
+}
+
+#impact .decisionstatus .statusbox b{
+  display:block !important;
+  margin:0 !important;
+  color:#e8e5de !important;
+  font-size:18px !important;
+  line-height:1.2 !important;
+  font-weight:650 !important;
+}
+
+/* ONLY the Bias box carries the market-direction color. */
+#impact .decisionstatus .biasbox{
   transition:background .2s ease,border-color .2s ease,box-shadow .2s ease !important;
 }
 
-/* BEARISH */
-#impact > .grid:has(.impactscoreline .direction) .card:has(.decisioncall){
+#impact .decisionstatus.bias-riskoff .biasbox{
   background:rgba(227,107,107,.12) !important;
   border-color:rgba(227,107,107,.62) !important;
   box-shadow:inset 4px 0 0 #e36b6b !important;
 }
+#impact .decisionstatus.bias-riskoff .biasbox b{color:#e36b6b !important}
 
-/* BULLISH */
-#impact > .grid:has(.impactscoreline .positive) .card:has(.decisioncall){
+#impact .decisionstatus.bias-riskon .biasbox{
   background:rgba(99,201,139,.12) !important;
   border-color:rgba(99,201,139,.62) !important;
   box-shadow:inset 4px 0 0 #63c98b !important;
 }
+#impact .decisionstatus.bias-riskon .biasbox b{color:#63c98b !important}
 
-/* NEUTRAL / CAUTION */
-#impact > .grid:not(:has(.impactscoreline .direction)):not(:has(.impactscoreline .positive)) .card:has(.decisioncall){
+#impact .decisionstatus.bias-neutral .biasbox{
   background:rgba(230,173,91,.12) !important;
   border-color:rgba(230,173,91,.62) !important;
   box-shadow:inset 4px 0 0 #e6ad5b !important;
 }
+#impact .decisionstatus.bias-neutral .biasbox b{color:#e6ad5b !important}
 
-/* Immediate Read is the strongest callout inside the directional panel. */
-#impact > .grid .card:has(.decisioncall) .decisioncall:last-child{
-  margin-top:18px !important;
+/* Market condition intentionally remains neutral even when Bias is directional. */
+#impact .decisionstatus .conditionbox{
+  background:#0f0f0e !important;
+  border-color:var(--line) !important;
+  box-shadow:none !important;
+}
+#impact .decisionstatus .conditionbox b{color:#e8e5de !important}
+
+/* Immediate Read sits below the status cards and remains neutral: action text, not decoration. */
+#impact > .grid .card:has(.decisionstatus) .decisioncall{
+  margin-top:14px !important;
+  background:#0f0f0e !important;
+  border-color:var(--line) !important;
+  color:#e8e5de !important;
+}
+#impact > .grid .card:has(.decisionstatus) .decisioncall b{color:#e8e5de !important}
+
+/* Kill the previous broad directional styling so Why It Matters never becomes a giant colored panel. */
+#impact > .grid .card:has(.decisioncall):not(:has(.decisionstatus)){
+  background:#111110 !important;
+  border-color:var(--line) !important;
+  box-shadow:none !important;
 }
 
-#impact > .grid:has(.impactscoreline .direction) .card:has(.decisioncall) .decisioncall:last-child{
-  color:#e36b6b !important;
-  border-color:rgba(227,107,107,.52) !important;
-  background:rgba(227,107,107,.10) !important;
-}
-
-#impact > .grid:has(.impactscoreline .positive) .card:has(.decisioncall) .decisioncall:last-child{
-  color:#63c98b !important;
-  border-color:rgba(99,201,139,.52) !important;
-  background:rgba(99,201,139,.10) !important;
-}
-
-#impact > .grid:not(:has(.impactscoreline .direction)):not(:has(.impactscoreline .positive)) .card:has(.decisioncall) .decisioncall:last-child{
-  color:#e6ad5b !important;
-  border-color:rgba(230,173,91,.52) !important;
-  background:rgba(230,173,91,.10) !important;
-}
-
-/* Keep the content readable; the panel itself carries the bias signal. */
-#impact > .grid .card:has(.decisioncall) .label,
-#impact > .grid .card:has(.decisioncall) h3,
-#impact > .grid .card:has(.decisioncall) p,
-#impact > .grid .card:has(.decisioncall) .chip{
-  color:inherit;
-}
-
-/* Impact Intelligence: ONLY Direction/Risk-on/Risk-off is directional. Everything else stays neutral. */
+/* Impact Intelligence: directional color belongs ONLY to the Direction value. */
 #impact .highdetail .detail b{
   color:#e8e5de !important;
 }
@@ -79,10 +118,33 @@
 #impact .highdetail .detail b.positive{
   color:#63c98b !important;
 }
+/* Neutral Direction has no class in the component, so target only the Direction row. */
+#impact .highdetail .detail:nth-child(4) b:not(.direction):not(.positive){
+  color:#e6ad5b !important;
+}
+
+/* Override the older position-aware selectors that were coloring unrelated fields. */
+#impact .highdetail .detail:nth-child(1) b,
+#impact .highdetail .detail:nth-child(2) b,
+#impact .highdetail .detail:nth-child(3) b,
+#impact .highdetail .detail:nth-child(5) b,
+#impact .highdetail .detail:nth-child(6) b,
+#impact .highdetail .detail:nth-child(7) b,
+#impact .highdetail .detail:nth-child(n+8) b{
+  color:#e8e5de !important;
+}
+#impact .highdetail .detail:nth-child(4) b.direction{color:#e36b6b !important}
+#impact .highdetail .detail:nth-child(4) b.positive{color:#63c98b !important}
+#impact .highdetail .detail:nth-child(4) b:not(.direction):not(.positive){color:#e6ad5b !important}
 
 @media(max-width:700px){
-  #impact > .grid .card:has(.decisioncall){
+  #impact > .grid .card:has(.decisionstatus){
     min-height:0 !important;
     padding:22px !important;
   }
+  #impact .decisionstatus .statusbox{
+    min-height:82px !important;
+    padding:15px 16px !important;
+  }
+  #impact .decisionstatus .statusbox b{font-size:17px !important}
 }
