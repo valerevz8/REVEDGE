@@ -2,6 +2,7 @@ import MarketNow from "./components/MarketNow";
 import TradingViewChart from "./components/TradingViewChart";
 import RealtimeHighImpact from "./components/RealtimeHighImpact";
 import SectorRadar from "./components/SectorRadar";
+import { HeaderPreferences } from "./components/Preferences";
 
 export default function Home() {
   return (
@@ -9,14 +10,13 @@ export default function Home() {
       <header className="shell nav">
         <a className="brand" href="#top"><span className="brand-rev">REV</span><span className="brand-edge">EDGE</span></a>
         <nav className="navlinks"><a href="#impact">High Impact</a><a href="/calendar">Event Calendar</a><a href="#market">Market</a><a href="#charts">Charts</a><a href="#sectors">Sectors</a><a href="#pro">Pricing</a></nav>
-        <div className="navright"><span className="lang">EN / ID</span><a className="sign" href="#pro">Sign in</a><button className="probtn">Go Pro</button></div>
+        <div className="navright"><HeaderPreferences /><a className="sign" href="#pro">Sign in</a><button className="probtn">Go Pro</button></div>
       </header>
 
       <RealtimeHighImpact />
 
       <section className="shell hero" id="top">
-        <div><div className="eyebrow">Curated crypto intelligence</div><h1><span className="hero-main">See what matters.</span><span className="hero-sub">Before the noise.</span></h1><p>Market-moving events, live market structure, and capital rotation — filtered down to what a trader actually needs to know.</p><div className="actions"><a className="btn primary" href="#impact">Explore REVEDGE</a><a className="btn" href="/calendar">View Event Calendar</a></div></div><MarketNow />
-      </section>
+        <div><div className="eyebrow">Curated crypto intelligence</div><h1><span className="hero-main">See what matters.</span><span className="hero-sub">Before the noise.</span></h1><p>Market-moving events, live market structure, and capital rotation — filtered down to what a trader actually needs to know.</p><div className="actions"><a className="btn primary" href="#impact">Explore REVEDGE</a><a className="btn" href="/calendar">View Event Calendar</a></div></div><MarketNow /></section>
 
       <TradingViewChart />
       <SectorRadar />
