@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import HighImpact from "./HighImpact";
+import HighImpactV1 from "./HighImpactV1";
 
 type IntelligenceEvent = {
   eventId?: string;
@@ -11,10 +11,9 @@ type IntelligenceEvent = {
 };
 
 /**
- * Fast browser watcher over the cached intelligence snapshot.
- * The server ingests external feeds once per minute; the browser checks the
- * lightweight cached result every 15s so a new event appears quickly without
- * multiplying external RSS fetches or serverless compute.
+ * Lightweight browser watcher over the cached intelligence snapshot.
+ * External feeds are still ingested server-side once per minute; this 15s
+ * browser poll only checks the cached snapshot and never fans out to sources.
  */
 export default function RealtimeHighImpact() {
   const [tick, setTick] = useState(0);
@@ -26,10 +25,9 @@ export default function RealtimeHighImpact() {
       const data = await response.json();
       const top: IntelligenceEvent | undefined = data.events?.[0];
       const signature = top
-        ? `${top.eventId}|${top.lifecycle}|${top.priority}|${top.publishedAt}`
+        ? `${top.eventId}|${top.lifecycle}|${top.stateChange}|${top.priority}|${top.publishedAt}`
         : "none";
       const previous = window.sessionStorage.getItem("revedge:intelligence-signature");
-
       if (previous !== signature) {
         window.sessionStorage.setItem("revedge:intelligence-signature", signature);
         setTick((value) => value + 1);
@@ -41,7 +39,6 @@ export default function RealtimeHighImpact() {
 
   useEffect(() => {
     let timer: number | undefined;
-
     const schedule = () => {
       if (timer) window.clearTimeout(timer);
       const delay = document.visibilityState === "visible" ? 15000 : 60000;
@@ -50,18 +47,14 @@ export default function RealtimeHighImpact() {
         schedule();
       }, delay);
     };
-
     const onVisibility = () => {
       if (document.visibilityState === "visible") void poll();
       schedule();
     };
-
     void poll();
     document.addEventListener("visibilitychange", onVisibility);
     schedule();
-
     const minuteRefresh = window.setInterval(() => setTick((value) => value + 1), 60000);
-
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
       if (timer) window.clearTimeout(timer);
@@ -69,5 +62,5 @@ export default function RealtimeHighImpact() {
     };
   }, [poll]);
 
-  return <HighImpact key={tick} />;
+  return <HighImpactV1 key={tick} />;
 }
