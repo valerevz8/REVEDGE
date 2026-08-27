@@ -1,6 +1,6 @@
 import MarketNow from "./components/MarketNow";
 import TradingViewChart from "./components/TradingViewChart";
-import HighImpact from "./components/HighImpact";
+import RealtimeHighImpact from "./components/RealtimeHighImpact";
 import SectorRadar from "./components/SectorRadar";
 
 export default function Home() {
@@ -12,7 +12,7 @@ export default function Home() {
         <div className="navright"><span className="lang">EN / ID</span><a className="sign" href="#pro">Sign in</a><button className="probtn">Go Pro</button></div>
       </header>
 
-      <HighImpact />
+      <RealtimeHighImpact />
 
       <section className="shell hero" id="top">
         <div><div className="eyebrow">Curated crypto intelligence</div><h1><span className="hero-main">See what matters.</span><span className="hero-sub">Before the noise.</span></h1><p>Market-moving events, live market structure, and capital rotation — filtered down to what a trader actually needs to know.</p><div className="actions"><a className="btn primary" href="#impact">Explore REVEDGE</a><a className="btn" href="/calendar">View Event Calendar</a></div></div><MarketNow />
