@@ -58,6 +58,7 @@ function translateText(value: string, id: boolean) {
   if (!value.trim()) return value;
   if (!id) {
     let next = value;
+    if (next.includes("Grafik")) next = next.replace(/Grafik/g, "Charts");
     for (const [en, translated] of pairs) next = next.split(translated).join(en);
     return next;
   }
