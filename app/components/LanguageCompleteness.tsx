@@ -5,6 +5,7 @@ import { useEffect } from "react";
 const ID: Record<string, string> = {
   "Market view": "Tampilan market",
   "Charts": "Grafik",
+  "Chart": "Grafik",
   "TradingView · live market view": "TradingView · tampilan market live",
   "LIVE · refreshed 60s": "LIVE · diperbarui 60 dtk",
   "LIVE · 15s": "LIVE · 15 dtk",
@@ -52,7 +53,6 @@ const ID: Record<string, string> = {
 };
 
 const pairs = Object.entries(ID).sort((a, b) => b[0].length - a[0].length);
-const REVERSE = new Map(pairs.map(([en, id]) => [id, en]));
 
 function translateText(value: string, id: boolean) {
   if (!value.trim()) return value;
