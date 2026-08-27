@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import HighImpactV1 from "./HighImpactV1";
+import HighImpact from "./HighImpact";
 
 type IntelligenceEvent = {
   eventId?: string;
@@ -63,5 +63,5 @@ export default function RealtimeHighImpact() {
     };
   }, [poll]);
 
-  return <HighImpactV1 key={tick} />;
+  return <HighImpact key={tick} />;
 }
