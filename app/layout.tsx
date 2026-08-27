@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./position-aware.css";
+import "./theme-preferences.css";
 import { PreferencesProvider } from "./components/Preferences";
 
 export const metadata: Metadata = {
