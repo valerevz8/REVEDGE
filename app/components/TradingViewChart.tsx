@@ -44,7 +44,7 @@ export default function TradingViewChart() {
         timezone: "Etc/UTC",
         theme: isLight ? "light" : "dark",
         style: "1",
-        locale: language === "id" ? "id_ID" : "en",
+        locale: language === "id" ? "id" : "en",
         enable_publishing: false,
         hide_top_toolbar: false,
         hide_legend: false,
@@ -54,7 +54,7 @@ export default function TradingViewChart() {
         withdateranges: true,
         studies: [],
         backgroundColor: isLight ? "#f8f5ee" : "#0d0d0b",
-        gridColor: isLight ? "rgba(128,98,59,0.10)" : "rgba(128,98,59,0.10)",
+        gridColor: "rgba(128,98,59,0.10)",
         container_id: holderId,
       });
     };
