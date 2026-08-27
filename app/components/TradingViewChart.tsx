@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePreferences } from "./Preferences";
 
 const symbols = [
   { label: "BTC", symbol: "BINANCE:BTCUSDT" },
@@ -17,6 +18,7 @@ type TradingViewWindow = Window & {
 export default function TradingViewChart() {
   const [active, setActive] = useState(symbols[0]);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { theme, language } = usePreferences();
 
   useEffect(() => {
     const container = containerRef.current;
@@ -34,14 +36,15 @@ export default function TradingViewChart() {
       holder.style.height = "100%";
       containerRef.current.appendChild(holder);
 
+      const isLight = theme === "light";
       new tv.widget({
         autosize: true,
         symbol: active.symbol,
         interval: "60",
         timezone: "Etc/UTC",
-        theme: "dark",
+        theme: isLight ? "light" : "dark",
         style: "1",
-        locale: "en",
+        locale: language === "id" ? "id_ID" : "en",
         enable_publishing: false,
         hide_top_toolbar: false,
         hide_legend: false,
@@ -50,8 +53,8 @@ export default function TradingViewChart() {
         save_image: false,
         withdateranges: true,
         studies: [],
-        backgroundColor: "#0d0d0b",
-        gridColor: "rgba(128,98,59,0.10)",
+        backgroundColor: isLight ? "#f8f5ee" : "#0d0d0b",
+        gridColor: isLight ? "rgba(128,98,59,0.10)" : "rgba(128,98,59,0.10)",
         container_id: holderId,
       });
     };
@@ -71,7 +74,7 @@ export default function TradingViewChart() {
     document.head.appendChild(script);
 
     return () => script.removeEventListener("load", mount);
-  }, [active]);
+  }, [active, theme, language]);
 
   return (
     <section className="shell section" id="charts">
