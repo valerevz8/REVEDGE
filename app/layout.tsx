@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./position-aware.css";
 import "./theme-preferences.css";
+import "./visual-fixes.css";
 import { PreferencesProvider } from "./components/Preferences";
 import LanguageCompleteness from "./components/LanguageCompleteness";
 
