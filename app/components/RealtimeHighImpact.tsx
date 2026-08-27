@@ -1,18 +1,49 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import HighImpact from "./HighImpact";
 
+type IntelligenceEvent = {
+  eventId?: string;
+  lifecycle?: string;
+  priority?: number;
+  publishedAt?: string;
+};
+
 /**
- * Realtime decision feed.
+ * Live catalyst watcher.
  *
- * Visible tab: poll aggressively so a fresh catalyst can surface quickly.
- * Hidden tab: back off to reduce unnecessary requests.
- * Returning to the tab triggers an immediate refresh instead of waiting
- * for the next interval.
+ * The browser asks the Event Intelligence endpoint for a lightweight
+ * decision snapshot. We only re-mount the heavy HighImpact view when the
+ * leading catalyst actually changes state, escalates, or a minute has passed
+ * for normal age/progress updates.
  */
 export default function RealtimeHighImpact() {
   const [tick, setTick] = useState(0);
+
+  const poll = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/intelligence?t=${Date.now()}`, {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache" },
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      const top: IntelligenceEvent | undefined = data.events?.[0];
+      const signature = top
+        ? `${top.eventId}|${top.lifecycle}|${top.priority}|${top.publishedAt}`
+        : "none";
+      const previous = window.sessionStorage.getItem("revedge:intelligence-signature");
+
+      if (previous !== signature) {
+        window.sessionStorage.setItem("revedge:intelligence-signature", signature);
+        setTick((value) => value + 1);
+      }
+    } catch {
+      // The main HighImpact component remains responsible for its own
+      // fallback state; watcher failures should never break the homepage.
+    }
+  }, []);
 
   useEffect(() => {
     let timer: number | undefined;
@@ -20,27 +51,29 @@ export default function RealtimeHighImpact() {
     const schedule = () => {
       if (timer) window.clearTimeout(timer);
       const delay = document.visibilityState === "visible" ? 10000 : 30000;
-      timer = window.setTimeout(() => {
-        setTick((value) => value + 1);
+      timer = window.setTimeout(async () => {
+        await poll();
         schedule();
       }, delay);
     };
 
     const onVisibility = () => {
-      if (document.visibilityState === "visible") {
-        setTick((value) => value + 1);
-      }
+      if (document.visibilityState === "visible") void poll();
       schedule();
     };
 
+    void poll();
     document.addEventListener("visibilitychange", onVisibility);
     schedule();
+
+    const minuteRefresh = window.setInterval(() => setTick((value) => value + 1), 60000);
 
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
       if (timer) window.clearTimeout(timer);
+      window.clearInterval(minuteRefresh);
     };
-  }, []);
+  }, [poll]);
 
   return <HighImpact key={tick} />;
 }
