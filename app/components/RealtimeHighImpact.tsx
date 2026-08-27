@@ -6,6 +6,7 @@ import HighImpactV1 from "./HighImpactV1";
 type IntelligenceEvent = {
   eventId?: string;
   lifecycle?: string;
+  stateChange?: string;
   priority?: number;
   publishedAt?: string;
 };
