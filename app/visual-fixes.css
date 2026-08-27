@@ -1,0 +1,11 @@
+/* Small visual cleanup: Sign in stays transparent in both themes. */
+.sign,
+:root[data-theme="light"] .sign,
+:root[data-theme="dark"] .sign,
+.navright > .sign {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  -webkit-appearance: none;
+  appearance: none;
+}
