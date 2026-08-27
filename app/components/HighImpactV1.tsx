@@ -40,7 +40,7 @@ export default function HighImpactV1() {
   const windowLabel = event ? windowFor(event) : ""; const progress = event ? Math.max(8, Math.min(100, event.impact * 10)) : 0;
   const sources = useMemo(() => event?.sources ?? [], [event]);
   return <section className="shell section" id="impact">
-    <div className="sectiontitle"><div><div className="label">{tr("Decision intelligence · Priority feed", id)}</div><h2>{tr("High Impact", id)}</h2></div><span className="sub">{id ? "LANGSUNG · diperbarui 60d" : "LIVE · refreshed 60s"}</span></div>
+    <div className="sectiontitle"><div><div className="label">{tr("Decision intelligence · Priority feed", id)}</div><h2>{tr("High Impact", id)}</h2></div><span className="sub">{id ? "LANGSUNG · diperbarui tiap 60 detik" : "LIVE · refreshed 60s"}</span></div>
     {!event ? <div className="card newsempty">{tr("No high-impact event is available right now.", id)}</div> : <>
       <div className="grid">
         <article className="card impact" style={{ position: "relative", overflow: "hidden" }}>
