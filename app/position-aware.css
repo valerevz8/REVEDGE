@@ -59,65 +59,49 @@
   #impact > .highdetail + .card + .card > .label{padding:16px 16px 12px}
 }
 
-/* V1 bias signaling — same premium layout, clearer directional read */
-.revedge-bias-bearish #impact .impactscoreline > span,
-.revedge-bias-bearish #impact .highdetail .detail:nth-child(4) b,
-.revedge-bias-bearish #impact .highdetail .detail:nth-child(6) b,
-.revedge-bias-bearish #impact .highdetail .detail:nth-child(7) b{
+/* V1 bias signaling — driven by the existing Direction class in the live component. */
+#impact:has(.direction) .impactscoreline > span,
+#impact:has(.direction) .highdetail .detail:nth-child(4) b,
+#impact:has(.direction) .highdetail .detail:nth-child(6) b,
+#impact:has(.direction) .highdetail .detail:nth-child(7) b{
   color:#e36b6b !important;
 }
-.revedge-bias-bullish #impact .impactscoreline > span,
-.revedge-bias-bullish #impact .highdetail .detail:nth-child(4) b,
-.revedge-bias-bullish #impact .highdetail .detail:nth-child(6) b,
-.revedge-bias-bullish #impact .highdetail .detail:nth-child(7) b{
+#impact:has(.positive) .impactscoreline > span,
+#impact:has(.positive) .highdetail .detail:nth-child(4) b,
+#impact:has(.positive) .highdetail .detail:nth-child(6) b,
+#impact:has(.positive) .highdetail .detail:nth-child(7) b{
   color:#63c98b !important;
 }
-.revedge-bias-caution #impact .impactscoreline > span,
-.revedge-bias-caution #impact .highdetail .detail:nth-child(4) b,
-.revedge-bias-caution #impact .highdetail .detail:nth-child(6) b,
-.revedge-bias-caution #impact .highdetail .detail:nth-child(7) b{
-  color:#e6ad5b !important;
-}
 
-/* Macro caution + immediate read: bias color is visible at first glance. */
-.revedge-bias-bearish #impact > .grid > .card:nth-child(2) .decisioncall:last-child,
-.revedge-bias-bearish #impact > .grid > .card:nth-child(2) .decisioncall:last-child b{
+/* Macro caution / Why it matters: the existing direction marker is the source of truth. */
+#impact > .grid > .card:nth-child(2):has(.direction) .decisioncall,
+#impact > .grid > .card:nth-child(2):has(.direction) .decisioncall b{
   color:#e36b6b !important;
-  border-color:rgba(227,107,107,.34) !important;
 }
-.revedge-bias-bullish #impact > .grid > .card:nth-child(2) .decisioncall:last-child,
-.revedge-bias-bullish #impact > .grid > .card:nth-child(2) .decisioncall:last-child b{
+#impact > .grid > .card:nth-child(2):has(.positive) .decisioncall,
+#impact > .grid > .card:nth-child(2):has(.positive) .decisioncall b{
   color:#63c98b !important;
-  border-color:rgba(99,201,139,.34) !important;
 }
-.revedge-bias-caution #impact > .grid > .card:nth-child(2) .decisioncall:last-child,
-.revedge-bias-caution #impact > .grid > .card:nth-child(2) .decisioncall:last-child b{
-  color:#e6ad5b !important;
-  border-color:rgba(230,173,91,.34) !important;
-}
-
-/* Direction itself should never look neutral when the engine has a clear bias. */
-.revedge-bias-bearish #impact .decisioncall b.direction,
-.revedge-bias-bearish #impact .direction{color:#e36b6b !important}
-.revedge-bias-bullish #impact .decisioncall b.positive,
-.revedge-bias-bullish #impact .positive{color:#63c98b !important}
-
-/* Keep the signal restrained: color the text/border, not the whole card. */
-.revedge-bias-bearish #impact > .grid > .card:nth-child(2) .decisioncall:last-child{
+#impact > .grid > .card:nth-child(2):has(.direction) .decisioncall{
   background:rgba(227,107,107,.055) !important;
   border:1px solid rgba(227,107,107,.28) !important;
   border-radius:12px !important;
   padding:14px 16px !important;
 }
-.revedge-bias-bullish #impact > .grid > .card:nth-child(2) .decisioncall:last-child{
+#impact > .grid > .card:nth-child(2):has(.positive) .decisioncall{
   background:rgba(99,201,139,.055) !important;
   border:1px solid rgba(99,201,139,.28) !important;
   border-radius:12px !important;
   padding:14px 16px !important;
 }
-.revedge-bias-caution #impact > .grid > .card:nth-child(2) .decisioncall:last-child{
-  background:rgba(230,173,91,.055) !important;
-  border:1px solid rgba(230,173,91,.28) !important;
+
+/* Caution / neutral state: use the warm warning tone without affecting neutral cards globally. */
+#impact > .grid > .card:nth-child(2):has(.decisioncall b:not(.direction):not(.positive)) .decisioncall{
   border-radius:12px !important;
-  padding:14px 16px !important;
 }
+
+/* Direction itself should never look neutral when the engine has a clear bias. */
+#impact:has(.direction) .decisioncall b.direction,
+#impact:has(.direction) .direction{color:#e36b6b !important}
+#impact:has(.positive) .decisioncall b.positive,
+#impact:has(.positive) .positive{color:#63c98b !important}
