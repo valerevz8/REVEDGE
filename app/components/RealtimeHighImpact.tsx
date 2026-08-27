@@ -11,22 +11,17 @@ type IntelligenceEvent = {
 };
 
 /**
- * Live catalyst watcher.
- *
- * The browser asks the Event Intelligence endpoint for a lightweight
- * decision snapshot. We only re-mount the heavy HighImpact view when the
- * leading catalyst actually changes state, escalates, or a minute has passed
- * for normal age/progress updates.
+ * Fast browser watcher over the cached intelligence snapshot.
+ * The server ingests external feeds once per minute; the browser checks the
+ * lightweight cached result every 15s so a new event appears quickly without
+ * multiplying external RSS fetches or serverless compute.
  */
 export default function RealtimeHighImpact() {
   const [tick, setTick] = useState(0);
 
   const poll = useCallback(async () => {
     try {
-      const response = await fetch(`/api/intelligence?t=${Date.now()}`, {
-        cache: "no-store",
-        headers: { "Cache-Control": "no-cache" },
-      });
+      const response = await fetch("/api/intelligence", { cache: "default" });
       if (!response.ok) return;
       const data = await response.json();
       const top: IntelligenceEvent | undefined = data.events?.[0];
@@ -40,8 +35,7 @@ export default function RealtimeHighImpact() {
         setTick((value) => value + 1);
       }
     } catch {
-      // The main HighImpact component remains responsible for its own
-      // fallback state; watcher failures should never break the homepage.
+      // Never let the watcher break the homepage.
     }
   }, []);
 
@@ -50,7 +44,7 @@ export default function RealtimeHighImpact() {
 
     const schedule = () => {
       if (timer) window.clearTimeout(timer);
-      const delay = document.visibilityState === "visible" ? 10000 : 30000;
+      const delay = document.visibilityState === "visible" ? 15000 : 60000;
       timer = window.setTimeout(async () => {
         await poll();
         schedule();
