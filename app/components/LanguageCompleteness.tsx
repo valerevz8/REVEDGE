@@ -9,6 +9,7 @@ const ID: Record<string, string> = {
   "TradingView · live market view": "TradingView · tampilan market live",
   "LIVE · refreshed 60s": "LIVE · diperbarui 60 dtk",
   "LIVE · 15s": "LIVE · 15 dtk",
+  "● LIVE · 15s": "● LIVE · 15 dtk",
   "Google News · Macro": "Google News · Makro",
   "HIGH IMPACT · WATCH": "DAMPAK TINGGI · PANTAU",
   "BTC CATALYST → BREAKOUT NEEDS FOLLOW-THROUGH": "KATALIS BTC → BREAKOUT BUTUH KONFIRMASI LANJUTAN",
