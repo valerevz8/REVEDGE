@@ -11,6 +11,18 @@
   --green:#2f7d55;
   --red:#a94d4d;
   --yellow:#9b7b27;
+  --cal-bg:#fbf9f4;
+  --cal-box:#f8f5ee;
+  --cal-position:#f5f1e8;
+  --cal-action:#f1eadf;
+  --cal-control:#eee8dc;
+  --cal-hover:#eae4d9;
+  --cal-selected:#eee8dc;
+  --cal-selected-border:#9b907f;
+  --cal-current:#171512;
+  --cal-today:#171512;
+  --cal-today-text:#fbf9f4;
+  --cal-num:#575148;
 }
 
 :root[data-theme="light"] body { background:radial-gradient(circle at 70% -10%, rgba(128,98,59,.11), transparent 35%), var(--bg); }
@@ -59,7 +71,7 @@
 :root[data-theme="light"] .signal-dot.orange { background:#b86f19; }
 :root[data-theme="light"] .footer { color:#756e63; }
 
-/* Preserve the semantic green → yellow → red impact meter in light mode. */
+/* Preserve semantic green → yellow → red impact meter in light mode. */
 :root[data-theme="light"] .impactsegment { background:#d9d1c3 !important; }
 :root[data-theme="light"] .impactsegment:nth-child(1).active { background:#59b984 !important; }
 :root[data-theme="light"] .impactsegment:nth-child(2).active { background:#70c283 !important; }
@@ -100,16 +112,45 @@
 :root[data-theme="light"] .actionrow strong { color:var(--text); }
 :root[data-theme="light"] .preevent .positiongrid>div { color:var(--text); }
 
+/* Calendar: every surface follows the active theme. */
+:root[data-theme="light"] .re-calendar,
+:root[data-theme="light"] .re-detail { background:var(--cal-bg) !important; color:var(--text); box-shadow:0 18px 70px rgba(77,62,43,.10); }
+:root[data-theme="light"] .re-calnav button { background:var(--cal-control) !important; color:var(--text) !important; border-color:var(--line) !important; }
+:root[data-theme="light"] .re-calnav button:hover { background:var(--cal-hover) !important; }
+:root[data-theme="light"] .re-calnav button.current { color:var(--cal-current) !important; }
+:root[data-theme="light"] .re-day:hover { background:var(--cal-hover) !important; }
+:root[data-theme="light"] .re-day.selected { background:var(--cal-selected) !important; box-shadow:inset 0 0 0 2px var(--cal-selected-border) !important; }
+:root[data-theme="light"] .re-day.today .re-num { background:var(--cal-today) !important; color:var(--cal-today-text) !important; }
+:root[data-theme="light"] .re-num,
+:root[data-theme="light"] .re-dotlabel,
+:root[data-theme="light"] .re-week div,
+:root[data-theme="light"] .re-legend,
+:root[data-theme="light"] .re-month small,
+:root[data-theme="light"] .re-time span,
+:root[data-theme="light"] .re-box label,
+:root[data-theme="light"] .re-position span { color:var(--muted) !important; }
+:root[data-theme="light"] .re-time,
+:root[data-theme="light"] .re-box { background:var(--cal-box) !important; color:var(--text); }
+:root[data-theme="light"] .re-action { background:var(--cal-action) !important; }
+:root[data-theme="light"] .re-position>div { background:var(--cal-position); }
+:root[data-theme="light"] .re-position .no-pos { background:rgba(92,92,92,.055) !important; }
+:root[data-theme="light"] .re-position .long-pos { background:rgba(72,137,99,.075) !important; }
+:root[data-theme="light"] .re-position .short-pos { background:rgba(174,87,87,.075) !important; }
+:root[data-theme="light"] .re-position b,
+:root[data-theme="light"] .re-time b,
+:root[data-theme="light"] .re-box strong,
+:root[data-theme="light"] .re-detail h3 { color:var(--text) !important; }
+:root[data-theme="light"] .re-detail p { color:var(--muted) !important; }
+:root[data-theme="light"] .re-badge { color:var(--yellow); }
+:root[data-theme="light"] .re-badge.high { color:var(--red); }
+:root[data-theme="light"] .re-pill:not(.high):not(.medium) { background:var(--line); }
+
+/* Back button: never leave a black inline background in light mode. */
+:root[data-theme="light"] .navright > .sign { background:var(--panel) !important; color:var(--text) !important; border-color:var(--line) !important; }
+
 /* What to watch — aligned Apple-style rows. */
 #impact > .highdetail + .card .actionlist { margin-top:8px; }
-#impact > .highdetail + .card .actionrow {
-  display:grid;
-  grid-template-columns:120px minmax(0,1fr);
-  gap:18px;
-  align-items:start;
-  padding:12px 0;
-  border-top:1px solid var(--line);
-}
+#impact > .highdetail + .card .actionrow { display:grid; grid-template-columns:120px minmax(0,1fr); gap:18px; align-items:start; padding:12px 0; border-top:1px solid var(--line); }
 #impact > .highdetail + .card .actionrow:first-child { border-top:0; }
 #impact > .highdetail + .card .actionrow > strong { min-width:0; font-size:10px; letter-spacing:.04em; }
 #impact > .highdetail + .card .actionrow > span { min-width:0; line-height:1.55; }
@@ -147,11 +188,4 @@
 .theme-toggle:hover { color:var(--text); background:rgba(128,98,59,.08); transform:translateY(-1px); }
 
 @media (max-width: 980px) { .navlinks { display:none; } .navright { margin-left:auto; } }
-@media (max-width: 640px) {
-  .nav { height:64px; }
-  .navright { gap:7px; }
-  .pref-controls { gap:2px; }
-  .lang-toggle { font-size:11px; }
-  .theme-toggle { width:28px; height:28px; }
-  #impact > .highdetail + .card .actionrow { grid-template-columns:92px minmax(0,1fr); gap:12px; }
-}
+@media (max-width: 640px) { .nav { height:64px; } .navright { gap:7px; } .pref-controls { gap:2px; } .lang-toggle { font-size:11px; } .theme-toggle { width:28px; height:28px; } #impact > .highdetail + .card .actionrow { grid-template-columns:92px minmax(0,1fr); gap:12px; } }
