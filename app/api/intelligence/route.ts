@@ -41,23 +41,17 @@ async function getSnapshot() {
   const cached = await store.get("latest-news", { type: "json" });
   if (cached) return cached as any;
 
-  // First-deploy safety: populate from the existing news route if the
-  // scheduled function has not executed yet.
-  const siteUrl = process.env.URL;
-  if (!siteUrl) return null;
-  const response = await fetch(`${siteUrl}/api/news?bootstrap=${Date.now()}`, {
-    cache: "no-store",
-    headers: { "Cache-Control": "no-cache" },
-  });
-  if (!response.ok) return null;
-  return await response.json();
+  // Do not fan out to external news feeds from a normal user request.
+  // The scheduled ingestion owns external RSS fetching; before its first run,
+  // the UI receives a clean 503 rather than unexpectedly spending credits.
+  return null;
 }
 
 export async function GET() {
   try {
     const data = await getSnapshot();
     if (!data) {
-      return NextResponse.json({ ok: false, error: "intelligence snapshot unavailable" }, { status: 503 });
+      return NextResponse.json({ ok: false, error: "intelligence snapshot warming up" }, { status: 503 });
     }
 
     const stories = Array.isArray(data.stories) ? data.stories : [];
@@ -103,11 +97,9 @@ export async function GET() {
       events: events.slice(0, 12),
     }, {
       headers: {
-        // Browser can poll quickly, while Netlify's CDN reuses the same
-        // snapshot instead of executing the function for every poll.
         "Cache-Control": "public, max-age=0, s-maxage=15, stale-while-revalidate=30",
         "CDN-Cache-Control": "public, max-age=15, stale-while-revalidate=30",
-        "Netlify-CDN-Cache-Control": "public, max-age=15, stale-while-revalidate=30",
+        "Netlify-CDN-Cache-Control": "public, durable, max-age=15, stale-while-revalidate=30",
       },
     });
   } catch (error) {
