@@ -9,6 +9,7 @@ type IntelligenceEvent = {
   stateChange?: string;
   priority?: number;
   publishedAt?: string;
+  bias?: string;
 };
 
 /**
@@ -18,6 +19,7 @@ type IntelligenceEvent = {
  */
 export default function RealtimeHighImpact() {
   const [tick, setTick] = useState(0);
+  const [bias, setBias] = useState("neutral");
 
   const poll = useCallback(async () => {
     try {
@@ -26,9 +28,12 @@ export default function RealtimeHighImpact() {
       const data = await response.json();
       const top: IntelligenceEvent | undefined = data.events?.[0];
       const signature = top
-        ? `${top.eventId}|${top.lifecycle}|${top.stateChange}|${top.priority}|${top.publishedAt}`
+        ? `${top.eventId}|${top.lifecycle}|${top.stateChange}|${top.priority}|${top.publishedAt}|${top.bias}`
         : "none";
       const previous = window.sessionStorage.getItem("revedge:intelligence-signature");
+      const normalizedBias = String(top?.bias ?? "Neutral").toLowerCase();
+      const nextBias = normalizedBias.includes("bear") ? "bearish" : normalizedBias.includes("bull") ? "bullish" : "caution";
+      setBias(nextBias);
       if (previous !== signature) {
         window.sessionStorage.setItem("revedge:intelligence-signature", signature);
         setTick((value) => value + 1);
@@ -63,5 +68,9 @@ export default function RealtimeHighImpact() {
     };
   }, [poll]);
 
-  return <HighImpact key={tick} />;
+  return (
+    <div className={`revedge-bias revedge-bias-${bias}`}>
+      <HighImpact key={tick} />
+    </div>
+  );
 }
