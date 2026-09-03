@@ -1,10 +1,13 @@
 import { getStore } from "@netlify/blobs";
 import type { Config } from "@netlify/functions";
+import { buildIntelligence, type EventState } from "../../app/lib/intelligence";
 
 /**
  * One scheduled ingestion pass per minute.
- * The browser never fans out to the external RSS sources directly.
- * A unique query key deliberately bypasses any CDN object from a previous pass.
+ * The browser never fans out to external RSS sources directly.
+ * The scheduled pass refreshes raw news once, then derives the intelligence
+ * snapshot from that same payload and persists the lightweight state needed
+ * to detect NEW / ESCALATED / CONFIRMED / FADING transitions.
  */
 export default async () => {
   const siteUrl = process.env.URL;
@@ -24,13 +27,24 @@ export default async () => {
 
   const data = await response.json();
   const store = getStore("revedge-intelligence");
+  const previous = await store.get("event-state", { type: "json" }) as EventState[] | null;
+  const result = buildIntelligence(Array.isArray(data.stories) ? data.stories : [], Array.isArray(previous) ? previous : []);
 
-  await store.setJSON("latest-news", {
-    ...data,
-    refreshedAt: new Date().toISOString(),
+  await Promise.all([
+    store.setJSON("latest-news", {
+      ...data,
+      refreshedAt: new Date().toISOString(),
+    }),
+    store.setJSON("latest-intelligence", result.snapshot),
+    store.setJSON("event-state", result.state),
+  ]);
+
+  console.log("REVEDGE intelligence snapshot refreshed", {
+    events: result.snapshot.events.length,
+    active: result.snapshot.activeCount,
+    watch: result.snapshot.watchCount,
+    escalations: result.snapshot.escalations,
   });
-
-  console.log("REVEDGE intelligence snapshot refreshed", data.stories?.length ?? 0);
 };
 
 export const config: Config = {

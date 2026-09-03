@@ -1,0 +1,124 @@
+/* REVEDGE V2 — decision hierarchy / directional signaling */
+
+@media (min-width: 901px){
+  #impact > .grid{
+    grid-template-columns:minmax(0,1.35fr) minmax(360px,1fr) !important;
+    align-items:stretch !important;
+  }
+}
+
+#impact > .grid .card:has(.decisionstatus){
+  min-height:300px !important;
+  padding:24px !important;
+  background:#111110 !important;
+  border-color:var(--line) !important;
+  box-shadow:none !important;
+}
+
+#impact .decisionstatus{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  gap:12px !important;
+  margin-top:20px !important;
+}
+
+#impact .decisionstatus .statusbox{
+  min-height:88px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  justify-content:center !important;
+  gap:8px !important;
+  padding:16px 18px !important;
+  border:1px solid var(--line) !important;
+  border-radius:12px !important;
+  background:#0f0f0e !important;
+  box-shadow:none !important;
+}
+
+#impact .decisionstatus .statusbox span{
+  display:block !important;
+  margin:0 !important;
+  color:#858178 !important;
+  font-size:9px !important;
+  line-height:1.2 !important;
+  font-weight:700 !important;
+  letter-spacing:.12em !important;
+  text-transform:uppercase !important;
+}
+
+#impact .decisionstatus .statusbox b{
+  display:block !important;
+  margin:0 !important;
+  color:#e8e5de !important;
+  font-size:18px !important;
+  line-height:1.2 !important;
+  font-weight:650 !important;
+}
+
+#impact .decisionstatus .biasbox{transition:background .2s ease,border-color .2s ease,box-shadow .2s ease !important}
+#impact .decisionstatus.bias-riskoff .biasbox{background:rgba(227,107,107,.12) !important;border-color:rgba(227,107,107,.62) !important;box-shadow:inset 4px 0 0 #e36b6b !important}
+#impact .decisionstatus.bias-riskoff .biasbox b{color:#e36b6b !important}
+#impact .decisionstatus.bias-riskon .biasbox{background:rgba(99,201,139,.12) !important;border-color:rgba(99,201,139,.62) !important;box-shadow:inset 4px 0 0 #63c98b !important}
+#impact .decisionstatus.bias-riskon .biasbox b{color:#63c98b !important}
+#impact .decisionstatus.bias-neutral .biasbox{background:rgba(230,173,91,.12) !important;border-color:rgba(230,173,91,.62) !important;box-shadow:inset 4px 0 0 #e6ad5b !important}
+#impact .decisionstatus.bias-neutral .biasbox b{color:#e6ad5b !important}
+
+#impact .decisionstatus .conditionbox{background:#0f0f0e !important;border-color:var(--line) !important;box-shadow:none !important}
+#impact .decisionstatus .conditionbox b{color:#e8e5de !important}
+#impact > .grid .card:has(.decisionstatus) .decisioncall{margin-top:14px !important;background:#0f0f0e !important;border-color:var(--line) !important;color:#e8e5de !important}
+#impact > .grid .card:has(.decisionstatus) .decisioncall b{color:#e8e5de !important}
+#impact > .grid .card:has(.decisioncall):not(:has(.decisionstatus)){background:#111110 !important;border-color:var(--line) !important;box-shadow:none !important}
+
+/* Impact Intelligence: ONLY Direction is directional. All other values stay neutral. */
+#impact .highdetail .detail b{color:#e8e5de !important}
+#impact:has(.direction) .highdetail .detail b:not(.direction):not(.positive){color:#e8e5de !important}
+#impact:has(.positive) .highdetail .detail b:not(.direction):not(.positive){color:#e8e5de !important}
+#impact .highdetail .detail b.direction{color:#e36b6b !important}
+#impact .highdetail .detail b.positive{color:#63c98b !important}
+#impact .highdetail .detail:nth-child(4) b:not(.direction):not(.positive){color:#e6ad5b !important}
+
+@media (max-width:700px){
+  #impact > .grid .card:has(.decisionstatus){min-height:0 !important;padding:22px !important}
+  #impact .decisionstatus .statusbox{min-height:82px !important;padding:15px 16px !important}
+  #impact .decisionstatus .statusbox b{font-size:17px !important}
+}
+
+/* LIGHT MODE — never reuse dark panel/text values. */
+:root[data-theme="light"] #impact > .grid .card:has(.decisionstatus),
+:root[data-theme="light"] #impact > .grid .card:has(.decisioncall):not(:has(.decisionstatus)){
+  background:var(--panel) !important;
+  color:var(--text) !important;
+  border-color:var(--line) !important;
+}
+:root[data-theme="light"] #impact > .grid .card:has(.decisionstatus) h3,
+:root[data-theme="light"] #impact > .grid .card:has(.decisionstatus) p,
+:root[data-theme="light"] #impact > .grid .card:has(.decisionstatus) .chip,
+:root[data-theme="light"] #impact > .grid .card:has(.decisionstatus) .decisioncall,
+:root[data-theme="light"] #impact > .grid .card:has(.decisionstatus) .decisioncall b{
+  color:var(--text) !important;
+}
+:root[data-theme="light"] #impact .decisionstatus .statusbox,
+:root[data-theme="light"] #impact .decisionstatus .conditionbox,
+:root[data-theme="light"] #impact > .grid .card:has(.decisionstatus) .decisioncall{
+  background:var(--panel) !important;
+  color:var(--text) !important;
+  border-color:var(--line) !important;
+}
+:root[data-theme="light"] #impact .decisionstatus .statusbox span{color:var(--muted) !important}
+:root[data-theme="light"] #impact .decisionstatus .statusbox b{color:var(--text) !important}
+
+/* Bias keeps its directional background in light mode. */
+:root[data-theme="light"] #impact .decisionstatus.bias-riskoff .biasbox{background:rgba(169,77,77,.12) !important;border-color:rgba(169,77,77,.62) !important;box-shadow:inset 4px 0 0 var(--red) !important}
+:root[data-theme="light"] #impact .decisionstatus.bias-riskoff .biasbox b{color:var(--red) !important}
+:root[data-theme="light"] #impact .decisionstatus.bias-riskon .biasbox{background:rgba(47,125,85,.12) !important;border-color:rgba(47,125,85,.62) !important;box-shadow:inset 4px 0 0 var(--green) !important}
+:root[data-theme="light"] #impact .decisionstatus.bias-riskon .biasbox b{color:var(--green) !important}
+:root[data-theme="light"] #impact .decisionstatus.bias-neutral .biasbox{background:rgba(155,123,39,.12) !important;border-color:rgba(155,123,39,.62) !important;box-shadow:inset 4px 0 0 var(--yellow) !important}
+:root[data-theme="light"] #impact .decisionstatus.bias-neutral .biasbox b{color:var(--yellow) !important}
+
+/* Impact Intelligence in light mode: readable neutral text; ONLY Direction changes color. */
+:root[data-theme="light"] #impact .highdetail .detail b,
+:root[data-theme="light"] #impact:has(.direction) .highdetail .detail b:not(.direction):not(.positive),
+:root[data-theme="light"] #impact:has(.positive) .highdetail .detail b:not(.direction):not(.positive){color:var(--text) !important}
+:root[data-theme="light"] #impact .highdetail .detail b.direction{color:var(--red) !important}
+:root[data-theme="light"] #impact .highdetail .detail b.positive{color:var(--green) !important}
+:root[data-theme="light"] #impact .highdetail .detail:nth-child(4) b:not(.direction):not(.positive){color:var(--yellow) !important}
