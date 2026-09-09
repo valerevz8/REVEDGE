@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import HighImpact from "./HighImpact";
+import PredictiveDecision from "./PredictiveDecision";
 
 type IntelligenceEvent = {
   eventId?: string;
@@ -70,6 +71,7 @@ export default function RealtimeHighImpact() {
 
   return (
     <div className={`revedge-bias revedge-bias-${bias}`}>
+      <PredictiveDecision />
       <HighImpact key={tick} />
     </div>
   );
