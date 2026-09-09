@@ -32,6 +32,8 @@ const translations: Record<string, string> = {
   "View Event Calendar": "Lihat Kalender Event",
   "Market Pulse": "Denyut Market",
   "LIVE": "LANGSUNG",
+  "NOW": "SEKARANG",
+  "LIVE · refreshed 60s": "LANGSUNG · diperbarui 60 dtk",
   "Decision intelligence · Priority feed": "Intelijen keputusan · Feed prioritas",
   "High Impact · Priority feed": "Dampak Tinggi · Feed prioritas",
   "Why it matters": "Kenapa ini penting",
@@ -123,7 +125,22 @@ function translateDom(language: Language) {
     const original = textNode.nodeValue ?? "";
     const trimmed = original.trim();
     if (!trimmed) continue;
-    const translated = language === "id" ? translations[trimmed] : Object.entries(translations).find(([, id]) => id === trimmed)?.[0];
+    let translated = language === "id"
+      ? translations[trimmed]
+      : Object.entries(translations).find(([, id]) => id === trimmed)?.[0];
+
+    if (!translated && language === "id") {
+      const days = trimmed.match(/^(\d+) HARI$/);
+      const hours = trimmed.match(/^(\d+)h$/);
+      if (days) translated = `${days[1]} DAYS`;
+      else if (hours) translated = `${hours[1]}j`;
+    } else if (!translated && language === "en") {
+      const days = trimmed.match(/^(\d+) DAYS$/);
+      const hours = trimmed.match(/^(\d+)j$/);
+      if (days) translated = `${days[1]} HARI`;
+      else if (hours) translated = `${hours[1]}h`;
+    }
+
     if (!translated || translated === trimmed) continue;
     textNode.nodeValue = original.replace(trimmed, translated);
   }
