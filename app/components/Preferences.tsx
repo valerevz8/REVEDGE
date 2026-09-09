@@ -16,100 +16,25 @@ type PreferencesContextValue = {
 const PreferencesContext = createContext<PreferencesContextValue | null>(null);
 
 const translations: Record<string, string> = {
-  "High Impact": "Dampak Tinggi",
-  "Event Calendar": "Kalender Event",
-  "Market": "Market",
-  "Charts": "Chart",
-  "Sectors": "Sektor",
-  "Pricing": "Harga",
-  "Sign in": "Masuk",
-  "Go Pro": "Go Pro",
-  "Curated crypto intelligence": "Intelijen crypto terkurasi",
-  "See what matters.": "Lihat apa yang penting.",
-  "Before the noise.": "Sebelum kebisingan.",
+  "High Impact": "Dampak Tinggi", "Event Calendar": "Kalender Event", "Market": "Market", "Charts": "Chart", "Sectors": "Sektor", "Pricing": "Harga", "Sign in": "Masuk", "Go Pro": "Go Pro",
+  "Curated crypto intelligence": "Intelijen crypto terkurasi", "See what matters.": "Lihat apa yang penting.", "Before the noise.": "Sebelum kebisingan.",
   "Market-moving events, live market structure, and capital rotation — filtered down to what a trader actually needs to know.": "Event penggerak market, struktur market live, dan rotasi modal — disaring menjadi hal yang benar-benar perlu diketahui trader.",
-  "Explore REVEDGE": "Jelajahi REVEDGE",
-  "View Event Calendar": "Lihat Kalender Event",
-  "Market Pulse": "Denyut Market",
-  "LIVE": "LANGSUNG",
-  "NOW": "SEKARANG",
-  "LIVE · refreshed 60s": "LANGSUNG · diperbarui 60 dtk",
-  "Decision intelligence · Priority feed": "Intelijen keputusan · Feed prioritas",
-  "High Impact · Priority feed": "Dampak Tinggi · Feed prioritas",
-  "Why it matters": "Kenapa ini penting",
-  "Immediate read": "Pembacaan langsung",
-  "Event clock": "Jam Event",
-  "Impact intelligence": "Intelijen dampak",
-  "Trader guidance": "Panduan trader",
-  "What to do": "Apa yang dilakukan",
-  "What to watch · next few hours": "Yang perlu dipantau · beberapa jam ke depan",
-  "Position-aware decision": "Keputusan berdasarkan posisi",
-  "Final action": "Aksi akhir",
-  "No position": "Tanpa posisi",
-  "Open long": "Long terbuka",
-  "Open short": "Short terbuka",
-  "Impact window": "Jendela dampak",
-  "Event age": "Usia event",
-  "Confidence": "Keyakinan",
-  "Market impact": "Dampak market",
-  "Direction": "Arah",
-  "Regime": "Kondisi market",
-  "Primary driver": "Penggerak utama",
-  "Second-order": "Dampak lanjutan",
-  "Event / alert time": "Waktu event / alert",
-  "U.S. time": "Waktu AS",
-  "UK time": "Waktu UK",
-  "Market session": "Sesi market",
-  "Alert age": "Usia alert",
-  "Expected relevance": "Relevansi yang diharapkan",
-  "What to watch": "Yang perlu dipantau",
-  "Capital rotation": "Rotasi modal",
-  "Top 3 Sectors": "3 Sektor Teratas",
-  "Live · 30s · breadth + relative strength": "Live · 30 dtk · breadth + kekuatan relatif",
-  "Loading live sector data…": "Memuat data sektor live…",
-  "REVEDGE could not reach the market data provider. Retrying automatically.": "REVEDGE tidak dapat terhubung ke penyedia data market. Mencoba lagi otomatis.",
-  "The market, personalized.": "Market yang dipersonalisasi.",
-  "Watchlist intelligence, personalized impact, custom alerts, and deeper sector signals. Free stays public. Pro becomes yours.": "Intelijen watchlist, dampak yang dipersonalisasi, alert khusus, dan sinyal sektor yang lebih dalam. Free tetap publik. Pro menjadi milikmu.",
-  "Explore Pro": "Jelajahi Pro",
-  "A REVE ecosystem product": "Produk ekosistem REVE",
-  "Know the risk before it arrives": "Kenali risikonya sebelum datang",
-  "See the dates.": "Lihat tanggalnya.",
-  "Prepare before the volatility.": "Bersiap sebelum volatilitas.",
+  "Explore REVEDGE": "Jelajahi REVEDGE", "View Event Calendar": "Lihat Kalender Event", "Market Pulse": "Denyut Market", "LIVE": "LANGSUNG", "NOW": "sekarang",
+  "LIVE · refreshed 60s": "LANGSUNG · diperbarui 60 dtk", "Decision intelligence · Priority feed": "Intelijen keputusan · Feed prioritas", "High Impact · Priority feed": "Dampak Tinggi · Feed prioritas",
+  "Why it matters": "Kenapa ini penting", "Immediate read": "Pembacaan langsung", "Event clock": "Jam Event", "Impact intelligence": "Intelijen dampak", "Trader guidance": "Panduan trader", "What to do": "Apa yang dilakukan",
+  "What to watch · next few hours": "Yang perlu dipantau · beberapa jam ke depan", "Position-aware decision": "Keputusan berdasarkan posisi", "Final action": "Aksi akhir", "No position": "Tanpa posisi", "Open long": "Long terbuka", "Open short": "Short terbuka",
+  "Impact window": "Jendela dampak", "Event age": "Usia event", "Confidence": "Keyakinan", "Market impact": "Dampak market", "Direction": "Arah", "Regime": "Kondisi market", "Primary driver": "Penggerak utama", "Second-order": "Dampak lanjutan",
+  "Event / alert time": "Waktu event / alert", "U.S. time": "Waktu AS", "UK time": "Waktu UK", "Market session": "Sesi market", "Alert age": "Usia alert", "Expected relevance": "Relevansi yang diharapkan", "What to watch": "Yang perlu dipantau", "Capital rotation": "Rotasi modal",
+  "Top 3 Sectors": "3 Sektor Teratas", "Live · 30s · breadth + relative strength": "Live · 30 dtk · breadth + kekuatan relatif", "Loading live sector data…": "Memuat data sektor live…",
+  "REVEDGE could not reach the market data provider. Retrying automatically.": "REVEDGE tidak dapat terhubung ke penyedia data market. Mencoba lagi otomatis.", "The market, personalized.": "Market yang dipersonalisasi.",
+  "Watchlist intelligence, personalized impact, custom alerts, and deeper sector signals. Free stays public. Pro becomes yours.": "Intelijen watchlist, dampak yang dipersonalisasi, alert khusus, dan sinyal sektor yang lebih dalam. Free tetap publik. Pro menjadi milikmu.", "Explore Pro": "Jelajahi Pro",
+  "A REVE ecosystem product": "Produk ekosistem REVE", "Know the risk before it arrives": "Kenali risikonya sebelum datang", "See the dates.": "Lihat tanggalnya.", "Prepare before the volatility.": "Bersiap sebelum volatilitas.",
   "REVEDGE maps the next high-impact macro events so traders can reduce surprise, prepare positions, and know exactly when the market deserves extra attention.": "REVEDGE memetakan event makro berdampak tinggi berikutnya agar trader bisa mengurangi kejutan, menyiapkan posisi, dan tahu kapan market perlu diperhatikan lebih serius.",
-  "Information → Preparation → Decision": "Informasi → Persiapan → Keputusan",
-  "REVEDGE · EVENT CALENDAR": "REVEDGE · KALENDER EVENT",
-  "Loading live intelligence…": "Memuat intelijen live…",
-  "Live intelligence unavailable": "Intelijen live tidak tersedia",
-  "PRE-EVENT WATCH · calendar synced": "PANTAUAN PRE-EVENT · kalender tersinkron",
-  "WATCH CLOSELY": "PANTAU DEKAT",
-  "MONITOR": "PANTAU",
-  "WAIT — TRADE THE REACTION": "TUNGGU — TRADE REAKSINYA",
-  "TIME TO EVENT": "WAKTU MENUJU EVENT",
-  "Priority": "Prioritas",
-  "Urgency": "Urgensi",
-  "Category": "Kategori",
-  "NO POSITION": "TANPA POSISI",
-  "OPEN LONG": "LONG TERBUKA",
-  "OPEN SHORT": "SHORT TERBUKA",
-  "BREADTH": "BREADTH",
-  "Leaders": "Pemimpin",
-  "Event": "Event",
-  "Alert issued": "Alert diterbitkan",
-  "Trigger": "Pemicu",
-  "Invalidation": "Batal jika",
-  "Confirmation": "Konfirmasi",
-  "Don't": "Jangan",
-  "DON'T": "JANGAN",
-  "Bull recovery": "Pemulihan bullish",
-  "Rejection": "Penolakan",
-  "Trade the confirmation": "Trade setelah konfirmasi",
-  "Wait for price confirmation": "Tunggu konfirmasi harga",
-  "Stay flat": "Tetap tanpa posisi",
-  "Prepare for volatility": "Bersiap menghadapi volatilitas",
-  "U.S. session": "Sesi AS",
-  "London session": "Sesi London",
-  "Asia session": "Sesi Asia",
-  "Asia / off-hours": "Asia / di luar jam utama",
+  "Information → Preparation → Decision": "Informasi → Persiapan → Keputusan", "REVEDGE · EVENT CALENDAR": "REVEDGE · KALENDER EVENT", "Loading live intelligence…": "Memuat intelijen live…", "Live intelligence unavailable": "Intelijen live tidak tersedia",
+  "PRE-EVENT WATCH · calendar synced": "PANTAUAN PRE-EVENT · kalender tersinkron", "WATCH CLOSELY": "PANTAU DEKAT", "MONITOR": "PANTAU", "WAIT — TRADE THE REACTION": "TUNGGU — TRADE REAKSINYA", "TIME TO EVENT": "WAKTU MENUJU EVENT",
+  "Priority": "Prioritas", "Urgency": "Urgensi", "Category": "Kategori", "NO POSITION": "TANPA POSISI", "OPEN LONG": "LONG TERBUKA", "OPEN SHORT": "SHORT TERBUKA", "BREADTH": "BREADTH", "Leaders": "Pemimpin", "Event": "Event", "Alert issued": "Alert diterbitkan",
+  "Trigger": "Pemicu", "Invalidation": "Batal jika", "Confirmation": "Konfirmasi", "Don't": "Jangan", "DON'T": "JANGAN", "Bull recovery": "Pemulihan bullish", "Rejection": "Penolakan", "Trade the confirmation": "Trade setelah konfirmasi",
+  "Wait for price confirmation": "Tunggu konfirmasi harga", "Stay flat": "Tetap tanpa posisi", "Prepare for volatility": "Bersiap menghadapi volatilitas", "U.S. session": "Sesi AS", "London session": "Sesi London", "Asia session": "Sesi Asia", "Asia / off-hours": "Asia / di luar jam utama",
 };
 
 function translateDom(language: Language) {
@@ -128,19 +53,17 @@ function translateDom(language: Language) {
     let translated = language === "id"
       ? translations[trimmed]
       : Object.entries(translations).find(([, id]) => id === trimmed)?.[0];
-
     if (!translated && language === "id") {
       const days = trimmed.match(/^(\d+) HARI$/);
       const hours = trimmed.match(/^(\d+)h$/);
-      if (days) translated = `${days[1]} DAYS`;
+      if (days) translated = `${days[1]} hari`;
       else if (hours) translated = `${hours[1]}j`;
     } else if (!translated && language === "en") {
-      const days = trimmed.match(/^(\d+) DAYS$/);
+      const days = trimmed.match(/^(\d+) hari$/);
       const hours = trimmed.match(/^(\d+)j$/);
-      if (days) translated = `${days[1]} HARI`;
+      if (days) translated = `${days[1]} days`;
       else if (hours) translated = `${hours[1]}h`;
     }
-
     if (!translated || translated === trimmed) continue;
     textNode.nodeValue = original.replace(trimmed, translated);
   }
@@ -149,14 +72,12 @@ function translateDom(language: Language) {
 export function PreferencesProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<Language>("en");
   const [theme, setThemeState] = useState<Theme>("dark");
-
   useEffect(() => {
     const savedLanguage = window.localStorage.getItem("revedge:language") as Language | null;
     const savedTheme = window.localStorage.getItem("revedge:theme") as Theme | null;
     if (savedLanguage === "en" || savedLanguage === "id") setLanguageState(savedLanguage);
     if (savedTheme === "dark" || savedTheme === "light") setThemeState(savedTheme);
   }, []);
-
   useEffect(() => {
     document.documentElement.lang = language;
     document.documentElement.dataset.theme = theme;
@@ -167,15 +88,12 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     observer.observe(document.body, { childList: true, subtree: true, characterData: true });
     return () => observer.disconnect();
   }, [language, theme]);
-
   const value = useMemo(() => ({
-    language,
-    theme,
+    language, theme,
     setLanguage: (next: Language) => setLanguageState(next),
     toggleLanguage: () => setLanguageState((current) => current === "en" ? "id" : "en"),
     toggleTheme: () => setThemeState((current) => current === "dark" ? "light" : "dark"),
   }), [language, theme]);
-
   return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>;
 }
 
@@ -189,12 +107,8 @@ export function HeaderPreferences() {
   const { language, theme, toggleLanguage, toggleTheme } = usePreferences();
   return (
     <div className="pref-controls">
-      <button className={`lang-toggle ${language === "en" ? "active" : ""}`} onClick={toggleLanguage} aria-label="Switch language">
-        EN / ID
-      </button>
-      <button className="theme-toggle" onClick={toggleTheme} aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} title={theme === "dark" ? "Light mode" : "Dark mode"}>
-        {theme === "dark" ? "☼" : "☾"}
-      </button>
+      <button className={`lang-toggle ${language === "en" ? "active" : ""}`} onClick={toggleLanguage} aria-label="Switch language">EN / ID</button>
+      <button className="theme-toggle" onClick={toggleTheme} aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} title={theme === "dark" ? "Light mode" : "Dark mode"}>{theme === "dark" ? "☼" : "☾"}</button>
     </div>
   );
 }
