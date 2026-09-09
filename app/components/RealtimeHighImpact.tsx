@@ -70,7 +70,21 @@ export default function RealtimeHighImpact() {
   }, [poll]);
 
   return (
-    <div className={`revedge-bias revedge-bias-${bias}`}>
+    <div className={`revedge-bias revedge-bias-${bias} revedge-efficient-home`}>
+      <style>{`
+        /* Home decision hierarchy: one signal, one location. */
+        .revedge-efficient-home .decisionstatus,
+        .revedge-efficient-home .decisioncall { display:none !important; }
+        .revedge-efficient-home .impactscoreline span { display:none !important; }
+        .revedge-efficient-home .decisionstrip { grid-template-columns:repeat(3,1fr); }
+        .revedge-efficient-home .decisionstrip span:last-child { display:none !important; }
+        .revedge-efficient-home .grid > .card:nth-child(2) .meta .chip:first-child { display:none !important; }
+        .revedge-efficient-home .highdetail > .card:first-child .detail:first-child { display:none !important; }
+        .revedge-efficient-home .highdetail > .card:first-child .detail:nth-child(5) { display:none !important; }
+        @media(max-width:800px){
+          .revedge-efficient-home .decisionstrip { grid-template-columns:1fr 1fr; }
+        }
+      `}</style>
       <PredictiveDecision />
       <HighImpact key={tick} />
     </div>
