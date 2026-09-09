@@ -37,20 +37,20 @@ function clamp(value: number, min = 0, max = 100) {
 export function buildPredictiveLayer(event: EventLike): PredictiveLayer {
   const impact = Number(event.impact ?? 0);
   const sources = Number(event.sourceCount ?? 1);
-  const confirmation = Number(event.confidence ?? 0);
+  const confidenceScore = Number(event.confidence ?? 0);
   const direction = event.direction ?? "Neutral";
   const tag = String(event.tag ?? "CRYPTO");
   const rows = Array.isArray(event.triggerRows) ? event.triggerRows : [];
 
   const directionScore = clamp(
-    52 + Math.max(0, impact - 7) * 7 + Math.max(0, sources - 1) * 5 + (direction === "Neutral" ? 0 : 10) + (confirmation >= 85 ? 5 : 0),
+    52 + Math.max(0, impact - 7) * 7 + Math.max(0, sources - 1) * 5 + (direction === "Neutral" ? 0 : 10) + (confidenceScore >= 85 ? 5 : 0),
     55,
     93,
   );
 
   let riskFlag: RiskFlag = "NONE";
   let riskLevel: RiskLevel = "LOW";
-  if (direction === "Risk-on" && (sources < 2 || confirmation < 82)) {
+  if (direction === "Risk-on" && (sources < 2 || confidenceScore < 82)) {
     riskFlag = "LIQUIDITY_SWEEP";
     riskLevel = "HIGH";
   } else if (direction === "Risk-on" && impact >= 8) {
