@@ -8,15 +8,15 @@ export default function Home() {
   return (
     <main>
       <style>{`
-        /* Keep the original premium card layout. Only change information order/density. */
+        /* High Impact layout: preserve the main premium design; only reorder the requested blocks. */
         #impact{display:flex;flex-wrap:wrap;align-items:flex-start;column-gap:14px}
-        #impact>.sectiontitle{order:1;width:100%}
-        #impact>.card:nth-child(3){order:2;width:100%;margin-top:0!important}
-        #impact>.grid{order:3;width:100%}
-        #impact>.highdetail{order:4;width:100%}
-        #impact>.card:nth-child(5){order:5;width:calc(50% - 7px)}
-        #impact>.card:nth-child(6){order:6;width:calc(50% - 7px)}
-        #impact>.card:nth-child(7){order:7;width:100%}
+        #impact>.sectiontitle{order:3;width:100%}
+        #impact>.card:nth-child(3){order:2;width:calc(50% - 7px);margin-top:0!important}
+        #impact>.grid{order:4;width:100%}
+        #impact>.highdetail{order:5;width:100%}
+        #impact>.card:nth-child(5){order:6;width:calc(50% - 7px)}
+        #impact>.card:nth-child(6){order:7;width:calc(50% - 7px)}
+        #impact>.card:nth-child(7){order:2;width:calc(50% - 7px)}
         @media(max-width:800px){
           #impact{display:block}
           #impact>.sectiontitle,#impact>.card,#impact>.grid,#impact>.highdetail{width:auto}
