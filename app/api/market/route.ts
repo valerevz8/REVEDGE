@@ -14,13 +14,17 @@ function pctChange(now: number, previous: number) {
 
 export async function GET() {
   try {
-    const [marketResponse, globalResponse] = await Promise.all([
+    const [marketResponse, globalResponse, goldResponse] = await Promise.all([
       fetch(
         `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&per_page=3&page=1&sparkline=true&price_change_percentage=24h`,
         { next: { revalidate: 30 }, headers: { accept: "application/json" } },
       ),
       fetch("https://api.coingecko.com/api/v3/global", {
         next: { revalidate: 30 },
+        headers: { accept: "application/json" },
+      }),
+      fetch("https://query1.finance.yahoo.com/v8/finance/chart/GC=F?range=2d&interval=1d", {
+        next: { revalidate: 60 },
         headers: { accept: "application/json" },
       }),
     ]);
@@ -38,9 +42,6 @@ export async function GET() {
     const total2 = Math.max(0, totalMarketCap - btcCap);
     const total3 = Math.max(0, totalMarketCap - btcCap - ethCap);
 
-    // CoinGecko's global endpoint exposes BTC/ETH dominance but not historical TOTAL2/TOTAL3.
-    // Approximate 24h breadth changes from the reported total-market-cap change and current
-    // BTC/ETH 24h moves. This keeps the dashboard live without inventing a historical series.
     const totalChange = Number(globalData?.market_cap_change_percentage_24h_usd ?? 0);
     const btcChange = Number(btc?.price_change_percentage_24h ?? 0);
     const ethChange = Number(eth?.price_change_percentage_24h ?? 0);
@@ -68,6 +69,20 @@ export async function GET() {
       throw new Error("Incomplete market response");
     }
 
+    let goldChange = 0;
+    try {
+      if (goldResponse.ok) {
+        const gold = await goldResponse.json();
+        const result = gold?.chart?.result?.[0];
+        const closes = Array.isArray(result?.indicators?.quote?.[0]?.close)
+          ? result.indicators.quote[0].close.filter((value: any) => Number.isFinite(Number(value)))
+          : [];
+        if (closes.length >= 2) goldChange = pctChange(Number(closes[closes.length - 1]), Number(closes[closes.length - 2]));
+      }
+    } catch {
+      goldChange = 0;
+    }
+
     return NextResponse.json(
       {
         coins,
@@ -75,7 +90,8 @@ export async function GET() {
         total2Change: pctChange(total2, total2Before),
         total3,
         total3Change: pctChange(total3, total3Before),
-        source: "CoinGecko",
+        goldChange,
+        source: "CoinGecko + Yahoo Finance",
         updatedAt: new Date().toISOString(),
       },
       { headers: { "Cache-Control": "s-maxage=30, stale-while-revalidate=60" } },
