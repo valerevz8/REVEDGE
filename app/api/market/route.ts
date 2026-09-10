@@ -14,17 +14,13 @@ function pctChange(now: number, previous: number) {
 
 export async function GET() {
   try {
-    const [marketResponse, globalResponse, goldResponse] = await Promise.all([
+    const [marketResponse, globalResponse] = await Promise.all([
       fetch(
         `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&per_page=3&page=1&sparkline=true&price_change_percentage=24h`,
         { next: { revalidate: 30 }, headers: { accept: "application/json" } },
       ),
       fetch("https://api.coingecko.com/api/v3/global", {
         next: { revalidate: 30 },
-        headers: { accept: "application/json" },
-      }),
-      fetch("https://query1.finance.yahoo.com/v8/finance/chart/GC=F?range=2d&interval=1d", {
-        next: { revalidate: 60 },
         headers: { accept: "application/json" },
       }),
     ]);
@@ -74,6 +70,10 @@ export async function GET() {
 
     let goldChange = 0;
     try {
+      const goldResponse = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/GC=F?range=2d&interval=1d", {
+        next: { revalidate: 60 },
+        headers: { accept: "application/json" },
+      });
       if (goldResponse.ok) {
         const gold = await goldResponse.json();
         const result = gold?.chart?.result?.[0];
@@ -94,7 +94,7 @@ export async function GET() {
         total3,
         total3Change: pctChange(total3, total3Before),
         goldChange,
-        source: "CoinGecko + Yahoo Finance",
+        source: "CoinGecko",
         updatedAt: new Date().toISOString(),
       },
       { headers: { "Cache-Control": "s-maxage=30, stale-while-revalidate=60" } },
