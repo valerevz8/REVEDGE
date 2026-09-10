@@ -7,6 +7,21 @@ import { HeaderPreferences } from "./components/Preferences";
 export default function Home() {
   return (
     <main>
+      <style>{`
+        /* Keep the original premium card layout. Only change information order/density. */
+        #impact{display:flex;flex-wrap:wrap;align-items:flex-start;column-gap:14px}
+        #impact>.sectiontitle{order:1;width:100%}
+        #impact>.card:nth-child(3){order:2;width:100%;margin-top:0!important}
+        #impact>.grid{order:3;width:100%}
+        #impact>.highdetail{order:4;width:100%}
+        #impact>.card:nth-child(5){order:5;width:calc(50% - 7px)}
+        #impact>.card:nth-child(6){order:6;width:calc(50% - 7px)}
+        #impact>.card:nth-child(7){order:7;width:100%}
+        @media(max-width:800px){
+          #impact{display:block}
+          #impact>.sectiontitle,#impact>.card,#impact>.grid,#impact>.highdetail{width:auto}
+        }
+      `}</style>
       <header className="shell nav">
         <a className="brand" href="#top"><span className="brand-rev">REV</span><span className="brand-edge">EDGE</span></a>
         <nav className="navlinks"><a href="#impact">High Impact</a><a href="/calendar">Event Calendar</a><a href="#market">Market</a><a href="#charts">Charts</a><a href="#sectors">Sectors</a><a href="#pro">Pricing</a></nav>
