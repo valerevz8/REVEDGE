@@ -42,6 +42,9 @@ export async function GET() {
     const total2 = Math.max(0, totalMarketCap - btcCap);
     const total3 = Math.max(0, totalMarketCap - btcCap - ethCap);
 
+    // CoinGecko's global endpoint exposes BTC/ETH dominance but not historical TOTAL2/TOTAL3.
+    // Approximate 24h breadth changes from the reported total-market-cap change and current
+    // BTC/ETH 24h moves. This keeps the dashboard live without inventing a historical series.
     const totalChange = Number(globalData?.market_cap_change_percentage_24h_usd ?? 0);
     const btcChange = Number(btc?.price_change_percentage_24h ?? 0);
     const ethChange = Number(eth?.price_change_percentage_24h ?? 0);
