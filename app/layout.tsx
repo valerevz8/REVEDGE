@@ -8,7 +8,7 @@ import { PreferencesProvider } from "./components/Preferences";
 import LanguageCompleteness from "./components/LanguageCompleteness";
 
 export const metadata: Metadata = {
-  title: "REVEDGE — See what matters. Before the noise.",
+  title: "REVESENSE — See what matters. Before the noise.",
   description: "Curated crypto intelligence for traders.",
 };
 
