@@ -1,7 +1,7 @@
 import { getStore } from "@netlify/blobs";
 import { NextResponse } from "next/server";
 
-// REVEDGE is decision-first: discover broadly, rank by impact *and* freshness,
+// REVESENSE is decision-first: discover broadly, rank by impact *and* freshness,
 // then surface only events that can change a trader's decision now.
 const FEEDS = [
   { name: "CoinDesk", url: "https://www.coindesk.com/arc/outboundfeeds/rss/" },
@@ -35,7 +35,7 @@ function isTradingRelevant(text: string) {
   const crypto = /bitcoin|btc|ethereum|eth|solana|sol|crypto|stablecoin|defi|exchange|etf|digital asset|altcoin/.test(x);
   const macro = /fed|fomc|cpi|pce|inflation|rate cut|rate hike|treasury|yield|liquidity|jobs report|payroll/.test(x) && (crypto || /fed|fomc|cpi|pce|treasury|yield/.test(x));
   const hardCatalyst = /etf|sec|cftc|approval|approved|regulation|lawsuit|liquidation|liquidations|hack|exploit|outflow|inflow|institutional|tariff|sanction|war|emergency|collapse|crash|depeg|bankruptcy/.test(x);
-  const marketMove = /(bitcoin|btc|ethereum|eth|solana|crypto).{0,100}(surge|soar|rally|sell-off|crash|collapse|breakout|breaks above|breaks below|record|all-time high|liquidation)/.test(x);
+  const marketMove = /(bitcoin|btc|ethereum|eth|solana|crypto).{0,120}(surge|soar|rally|sell-off|crash|collapse|breakout|breaks above|breaks below|record|all-time high|liquidation|rejected|rejects|support|resistance)/.test(x);
   const fluff = /podcast|interview|opinion|price prediction|weekly roundup|best crypto|top crypto to buy|could reach|will reach|sponsored|casino/.test(x);
   return !fluff && (macro || (crypto && hardCatalyst) || marketMove);
 }
@@ -44,8 +44,8 @@ function score(text: string, source: string) {
   const x = text.toLowerCase();
   let v = 4;
   const systemic = ["hack", "exploit", "collapse", "emergency", "stablecoin depeg", "bankruptcy", "exchange failure", "war", "sanction", "ban", "sec lawsuit", "cftc", "fed", "fomc", "cpi", "pce"];
-  const majorCatalyst = ["etf", "sec", "approval", "approved", "regulation", "lawsuit", "liquidation", "liquidations", "outflow", "inflow", "institutional", "tariff", "treasury", "liquidity"];
-  const marketMove = ["surge", "soar", "rally", "sell-off", "crash", "collapse", "breakout", "breaks above", "breaks below", "record", "all-time high"];
+  const majorCatalyst = ["etf", "sec", "approval", "approved", "regulation", "lawsuit", "liquidation", "liquidations", "outflow", "inflow", "institutional", "tariff", "treasury", "liquidity", "oil", "iran", "hormuz", "yen"];
+  const marketMove = ["surge", "soar", "rally", "sell-off", "crash", "collapse", "breakout", "breaks above", "breaks below", "record", "all-time high", "rejected", "rejects", "support", "resistance"];
   const magnitude = ["billion", "$1b", "$2b", "$3b", "$500m", "$400m", "$300m", "$445m", "largest", "massive", "record"];
   for (const word of systemic) if (x.includes(word)) v += 2;
   for (const word of majorCatalyst) if (x.includes(word)) v += 1;
@@ -59,8 +59,8 @@ function score(text: string, source: string) {
 
 function direction(text: string): "Risk-on" | "Risk-off" | "Neutral" {
   const x = text.toLowerCase();
-  if (/hack|exploit|ban|lawsuit|liquidation|crash|collapse|sanction|outflow|sell-off|selling|hawkish|depeg|hotter inflation/.test(x)) return "Risk-off";
-  if (/approval|approved|inflow|surge|rally|adoption|launch|partnership|record|buying|bullish|dovish|lower yields/.test(x)) return "Risk-on";
+  if (/hack|exploit|ban|lawsuit|liquidation|crash|collapse|sanction|outflow|sell-off|selling|hawkish|depeg|hotter inflation|oil above|oil surge|geopolitical escalation|war/.test(x)) return "Risk-off";
+  if (/approval|approved|inflow|surge|rally|adoption|launch|partnership|record|buying|bullish|dovish|lower yields|oil falls|ceasefire/.test(x)) return "Risk-on";
   return "Neutral";
 }
 
@@ -109,14 +109,9 @@ function biasFor(d: string, tag: string) {
   return tag === "MACRO" ? "Neutral" : "Wait for confirmation";
 }
 
-function sharpHeadline(tag: string, d: string, title: string) {
-  const x = title.toLowerCase();
-  if (tag === "MACRO" && /pce/.test(x)) return d === "Risk-off" ? "HOTTER PCE → BTC UPSIDE FACES MACRO HEADWIND" : "PCE → BTC REACTION NOW SETS THE NEXT MOVE";
-  if (tag === "MACRO") return d === "Risk-off" ? "MACRO SHOCK → BTC UPSIDE NOW NEEDS ABSORPTION" : "MACRO CATALYST → BTC MUST CONFIRM BEFORE RISK EXPANDS";
-  if (tag === "BTC") return d === "Risk-off" ? "BTC CATALYST → BREAKOUT STRUCTURE UNDER PRESSURE" : "BTC CATALYST → BREAKOUT NEEDS FOLLOW-THROUGH";
-  if (tag === "ETH") return d === "Risk-off" ? "ETH CATALYST → ALT RISK REMAINS VULNERABLE" : "ETH CATALYST → ALT ROTATION NEEDS CONFIRMATION";
-  if (tag === "SOL" || tag === "MEME") return d === "Risk-off" ? "HIGH-BETA SHOCK → SOL / MEME RISK STAYS FRAGILE" : "HIGH-BETA CATALYST → SOL / MEME ROTATION IN PLAY";
-  return d === "Risk-off" ? "CRYPTO CATALYST → RISK REPRICING TAKES PRIORITY" : "CRYPTO CATALYST → PRICE CONFIRMATION IS THE TRADE";
+// Keep the actual headline visible. Generic labels hide the reason the market is moving.
+function sharpHeadline(_tag: string, _d: string, title: string) {
+  return title.replace(/\s+/g, " ").trim();
 }
 
 function whyFor(tag: string, d: string) {
@@ -165,10 +160,13 @@ function extractItems(xml: string, source: string) {
     const ageHours = Math.max(0, (Date.now() - parsed.getTime()) / 3600000);
     const urgency = urgencyFor(impact, publishedAt);
     const priority = Math.max(1, Math.min(20, impact + freshness(publishedAt) + (urgency === "NOW" ? 1.2 : urgency === "WATCH" ? .4 : 0)));
+    const summary = description ? description.slice(0, 420) : `Live ${tag} catalyst from ${source}. Price reaction and breadth determine whether the headline becomes a trade.`;
+    const why = whyFor(tag, dir);
+    why[0] = summary;
     return {
       title, link, source, publishedAt, impact, priority, tag, direction: dir, urgency, window: windowFor(impact),
       confidence: Math.min(97, 68 + Math.round(impact * 2) + (source === "CoinDesk" ? 7 : source === "Cointelegraph" ? 4 : 2)),
-      affected: affected(tag), why: whyFor(tag, dir), whatToDo: guidance.whatToDo, avoid: guidance.avoid, whatToWatch: guidance.watch,
+      affected: affected(tag), why, whatToDo: guidance.whatToDo, avoid: guidance.avoid, whatToWatch: guidance.watch,
       invalidation: guidance.invalidations[0], regime: regimeFor(tag, dir), bias: biasFor(dir, tag), sharpHeadline: sharpHeadline(tag, dir, title),
       narrative: guidance.narrative, tradableSetup: guidance.setup, finalAction: guidance.final,
       triggerRows: guidance.triggers.map((trigger, i) => ({ watch: guidance.watch[i], trigger, invalidation: guidance.invalidations[i] })),
@@ -177,26 +175,58 @@ function extractItems(xml: string, source: string) {
   }).filter(Boolean) as Array<any>;
 }
 
+async function buildMarketStory() {
+  try {
+    const response = await fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum,solana&order=market_cap_desc&per_page=3&page=1&price_change_percentage=24h", { cache: "no-store", headers: { accept: "application/json" } });
+    if (!response.ok) return null;
+    const coins = await response.json();
+    const btc = coins.find((c: any) => c.id === "bitcoin");
+    const eth = coins.find((c: any) => c.id === "ethereum");
+    const sol = coins.find((c: any) => c.id === "solana");
+    if (!btc || !eth || !sol) return null;
+    const btcCh = Number(btc.price_change_percentage_24h ?? 0);
+    const ethCh = Number(eth.price_change_percentage_24h ?? 0);
+    const solCh = Number(sol.price_change_percentage_24h ?? 0);
+    const spread = Math.max(Math.abs(btcCh - ethCh), Math.abs(btcCh - solCh));
+    const meaningful = Math.abs(btcCh) >= 1.1 || spread >= 2.0;
+    if (!meaningful) return null;
+    const riskOff = btcCh < -1.1 || (btcCh < 0 && (ethCh < btcCh - 1 || solCh < btcCh - 1));
+    const riskOn = btcCh > 1.1 && ethCh > 0 && solCh > 0;
+    const dir: "Risk-on" | "Risk-off" | "Neutral" = riskOff ? "Risk-off" : riskOn ? "Risk-on" : "Neutral";
+    const impact = Math.min(9.6, Math.max(7.5, 7.2 + Math.abs(btcCh) * .75 + spread * .35));
+    const publishedAt = new Date().toISOString();
+    const price = Number(btc.current_price ?? 0);
+    const title = riskOff
+      ? `BTC ${price.toLocaleString("en-US", { maximumFractionDigits: 0 })} under pressure as ETH/SOL lag ${btcCh.toFixed(1)}% 24h`
+      : riskOn
+        ? `BTC ${price.toLocaleString("en-US", { maximumFractionDigits: 0 })} leads a broad crypto rebound at ${btcCh.toFixed(1)}% 24h`
+        : `BTC ${price.toLocaleString("en-US", { maximumFractionDigits: 0 })} diverges from ETH/SOL as crypto breadth thins`;
+    const summary = `Live market structure: BTC ${btcCh >= 0 ? "+" : ""}${btcCh.toFixed(1)}%, ETH ${ethCh >= 0 ? "+" : ""}${ethCh.toFixed(1)}%, SOL ${solCh >= 0 ? "+" : ""}${solCh.toFixed(1)}% over 24h. This is a chart-derived alert; no external headline is required.`;
+    const guidance = guidanceFor("BTC", dir);
+    return {
+      title, link: "", source: "Live Market Structure", publishedAt, impact, priority: impact + 2.5, tag: "BTC", direction: dir, urgency: "NOW" as const,
+      window: windowFor(impact), confidence: 82, affected: ["BTC", "ETH", "SOL", "ALT"], why: [summary, ...whyFor("BTC", dir).slice(1)],
+      whatToDo: guidance.whatToDo, avoid: guidance.avoid, whatToWatch: guidance.watch, invalidation: guidance.invalidations[0],
+      regime: regimeFor("BTC", dir), bias: biasFor(dir, "BTC"), sharpHeadline: title, narrative: guidance.narrative, tradableSetup: guidance.setup,
+      finalAction: guidance.final, triggerRows: guidance.triggers.map((trigger, i) => ({ watch: guidance.watch[i], trigger, invalidation: guidance.invalidations[i] })),
+      bullCase: guidance.bull, bearCase: guidance.bear, ageHours: 0,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const forceRefresh = url.searchParams.has("scheduled_refresh");
   const store = getStore("revedge-intelligence");
 
-  // Normal browser reads consume only the persisted intelligence snapshot.
-  // The scheduled pass is the only path that fans out to external RSS feeds.
   if (!forceRefresh) {
     try {
       const intelligence = await store.get("latest-intelligence", { type: "json" });
       if (intelligence) {
-        return NextResponse.json(intelligence, {
-          headers: {
-            "Cache-Control": "public, max-age=0, s-maxage=15, stale-while-revalidate=30",
-            "CDN-Cache-Control": "public, max-age=15, stale-while-revalidate=30",
-            "Netlify-CDN-Cache-Control": "public, durable, max-age=15, stale-while-revalidate=30",
-          },
-        });
+        return NextResponse.json(intelligence, { headers: { "Cache-Control": "public, max-age=0, s-maxage=15, stale-while-revalidate=30", "CDN-Cache-Control": "public, max-age=15, stale-while-revalidate=30", "Netlify-CDN-Cache-Control": "public, durable, max-age=15, stale-while-revalidate=30" } });
       }
-
       const cached = await store.get("latest-news", { type: "json" });
       if (cached) return NextResponse.json(cached);
     } catch {
@@ -205,14 +235,14 @@ export async function GET(request: Request) {
   }
 
   const responses = await Promise.allSettled(FEEDS.map(async (feed) => {
-    const r = await fetch(feed.url, {
-      headers: { "User-Agent": "REVEDGE/1.0 (+https://revedge.netlify.app)" },
-      cache: "no-store",
-    });
+    const r = await fetch(feed.url, { headers: { "User-Agent": "REVESENSE/1.0" }, cache: "no-store" });
     if (!r.ok) throw new Error(`feed ${feed.name} ${r.status}`);
     return extractItems(await r.text(), feed.name);
   }));
   const stories = responses.flatMap((r) => r.status === "fulfilled" ? r.value : []);
+  const marketStory = await buildMarketStory();
+  if (marketStory) stories.push(marketStory);
+
   const unique = new Map<string, any>();
   for (const story of stories) {
     const key = story.title.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -228,7 +258,7 @@ export async function GET(request: Request) {
   const hasNow = curated.some((story) => story.urgency === "NOW");
   const result = {
     stories: curated,
-    sources: FEEDS.map((feed) => feed.name),
+    sources: [...FEEDS.map((feed) => feed.name), "Live Market Structure"],
     updatedAt: new Date().toISOString(),
     mode: hasNow ? "HIGH_ALERT" : "NORMAL",
   };
@@ -237,15 +267,9 @@ export async function GET(request: Request) {
     try {
       await store.setJSON("latest-news", { ...result, refreshedAt: new Date().toISOString() });
     } catch (error) {
-      console.error("REVEDGE snapshot write failed", error);
+      console.error("REVESENSE snapshot write failed", error);
     }
   }
 
-  return NextResponse.json(result, {
-    headers: {
-      "Cache-Control": "public, max-age=0, s-maxage=15, stale-while-revalidate=30",
-      "CDN-Cache-Control": "public, max-age=15, stale-while-revalidate=30",
-      "Netlify-CDN-Cache-Control": "public, durable, max-age=15, stale-while-revalidate=30",
-    },
-  });
+  return NextResponse.json(result, { headers: { "Cache-Control": "public, max-age=0, s-maxage=15, stale-while-revalidate=30", "CDN-Cache-Control": "public, max-age=15, stale-while-revalidate=30", "Netlify-CDN-Cache-Control": "public, durable, max-age=15, stale-while-revalidate=30" } });
 }

@@ -68,6 +68,24 @@ export async function GET() {
       throw new Error("Incomplete market response");
     }
 
+    let goldChange = 0;
+    try {
+      const goldResponse = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/GC=F?range=2d&interval=1d", {
+        next: { revalidate: 60 },
+        headers: { accept: "application/json" },
+      });
+      if (goldResponse.ok) {
+        const gold = await goldResponse.json();
+        const result = gold?.chart?.result?.[0];
+        const closes = Array.isArray(result?.indicators?.quote?.[0]?.close)
+          ? result.indicators.quote[0].close.filter((value: any) => Number.isFinite(Number(value)))
+          : [];
+        if (closes.length >= 2) goldChange = pctChange(Number(closes[closes.length - 1]), Number(closes[closes.length - 2]));
+      }
+    } catch {
+      goldChange = 0;
+    }
+
     return NextResponse.json(
       {
         coins,
@@ -75,6 +93,7 @@ export async function GET() {
         total2Change: pctChange(total2, total2Before),
         total3,
         total3Change: pctChange(total3, total3Before),
+        goldChange,
         source: "CoinGecko",
         updatedAt: new Date().toISOString(),
       },
