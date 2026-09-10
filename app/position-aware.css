@@ -105,3 +105,14 @@
 #impact:has(.direction) .direction{color:#e36b6b !important}
 #impact:has(.positive) .decisioncall b.positive,
 #impact:has(.positive) .positive{color:#63c98b !important}
+
+/* Light mode: keep the position-aware decision readable instead of inheriting the dark panel. */
+:root[data-theme="light"] #impact > .highdetail + .card + .card{
+  background:#fbf9f4 !important;
+}
+:root[data-theme="light"] #impact > .highdetail + .card + .card .detail b{
+  color:#302d28 !important;
+}
+:root[data-theme="light"] #impact > .highdetail + .card + .card .detail:nth-child(1){background:rgba(150,150,150,.055) !important}
+:root[data-theme="light"] #impact > .highdetail + .card + .card .detail:nth-child(2){background:rgba(112,181,137,.09) !important}
+:root[data-theme="light"] #impact > .highdetail + .card + .card .detail:nth-child(3){background:rgba(205,113,113,.09) !important}
