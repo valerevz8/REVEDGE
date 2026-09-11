@@ -6,6 +6,7 @@ import "./visual-fixes.css";
 import "./v1-bias.css";
 import { PreferencesProvider } from "./components/Preferences";
 import LanguageCompleteness from "./components/LanguageCompleteness";
+import BrandMigration from "./components/BrandMigration";
 
 export const metadata: Metadata = {
   title: "HALVER — See what matters. Before the noise.",
@@ -18,6 +19,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <PreferencesProvider>
           <LanguageCompleteness />
+          <BrandMigration />
           {children}
         </PreferencesProvider>
       </body>
