@@ -16,8 +16,8 @@ const FEEDS = [
 const MIN_IMPACT = 7.0;
 const MAX_AGE_HOURS = 36;
 
-function clean(v: string) {
-  return v
+function clean(v: string, stripUrls = false) {
+  let out = v
     .replace(/<!\[CDATA\[|\]\]>/gi, "")
     .replace(/&amp;/gi, "&")
     .replace(/&quot;/gi, '"')
@@ -27,10 +27,9 @@ function clean(v: string) {
     .replace(/<a\b[\s\S]*?(?:>|$)/gi, " ")
     .replace(/<\/a>/gi, " ")
     .replace(/\bhref\s*=\s*["'][^"']*["']/gi, " ")
-    .replace(/https?:\/\/[^\s"'<>]+/gi, " ")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+    .replace(/<[^>]+>/g, " ");
+  if (stripUrls) out = out.replace(/https?:\/\/[^\s"'<>]+/gi, " ");
+  return out.replace(/\s+/g, " ").trim();
 }
 
 function tagFor(text: string) {
@@ -73,13 +72,8 @@ function isTradingRelevant(text: string) {
   const macro = hasMajorMacro(x);
   const priceShock = hasPriceShock(x);
 
-  // A crypto story needs a concrete catalyst or measurable market shock.
   if (crypto && (hardCatalyst || priceShock)) return true;
-
-  // Macro is allowed only when it is an actual policy/inflation/labor catalyst and
-  // has a plausible crypto transmission path; generic stock-market commentary is out.
   if (macro && (crypto || /treasury|yield|dollar|liquidity|oil/.test(x))) return true;
-
   return false;
 }
 
@@ -98,7 +92,6 @@ function score(text: string, source: string) {
   if (/breaking|just in|urgent|now|minutes ago|hours ago/.test(x)) v += 0.4;
   if (source === "CoinDesk") v += 0.3;
   if (source === "Cointelegraph") v += 0.2;
-
   return Math.max(1, Math.min(10, Math.round(v * 10) / 10));
 }
 
@@ -186,7 +179,7 @@ function extractItems(xml: string, source: string) {
     const title = clean(block.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? "");
     const link = clean(block.match(/<link[^>]*>([\s\S]*?)<\/link>/i)?.[1] ?? "");
     const published = clean(block.match(/<(?:pubDate|published|updated)[^>]*>([\s\S]*?)<\/(?:pubDate|published|updated)>/i)?.[1] ?? "");
-    const description = clean(block.match(/<(?:description|content:encoded)[^>]*>([\s\S]*?)<\/(?:description|content:encoded)>/i)?.[1] ?? "");
+    const description = clean(block.match(/<(?:description|content:encoded)[^>]*>([\s\S]*?)<\/(?:description|content:encoded)>/i)?.[1] ?? "", true);
     if (!title || !link || !published) return null;
 
     const parsed = new Date(published);
