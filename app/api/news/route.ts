@@ -1,30 +1,33 @@
 import { getStore } from "@netlify/blobs";
 import { NextResponse } from "next/server";
 
-// REVESENSE is decision-first: discover broadly, rank by impact *and* freshness,
-// then surface only events that can change a trader's decision now.
+// HALVER is decision-first: only surface fresh events with a credible, market-moving
+// mechanism. Generic commentary and low-impact headlines are intentionally excluded.
 const FEEDS = [
   { name: "CoinDesk", url: "https://www.coindesk.com/arc/outboundfeeds/rss/" },
   { name: "Cointelegraph", url: "https://cointelegraph.com/rss" },
   { name: "Decrypt", url: "https://decrypt.co/feed" },
   { name: "Bitcoin Magazine", url: "https://bitcoinmagazine.com/.rss/full/" },
-  { name: "Google News · Crypto", url: "https://news.google.com/rss/search?q=crypto%20bitcoin%20ethereum%20solana%20when%3A1d&hl=en-US&gl=US&ceid=US%3Aen" },
-  { name: "Google News · Macro", url: "https://news.google.com/rss/search?q=Fed%20CPI%20PCE%20Treasury%20yields%20crypto%20when%3A1d&hl=en-US&gl=US&ceid=US%3Aen" },
-  { name: "Google News · Regulation", url: "https://news.google.com/rss/search?q=SEC%20CFTC%20crypto%20regulation%20ETF%20stablecoin%20when%3A1d&hl=en-US&gl=US&ceid=US%3Aen" },
-  { name: "Google News · Market Shock", url: "https://news.google.com/rss/search?q=bitcoin%20liquidation%20hack%20exploit%20crypto%20crash%20when%3A1d&hl=en-US&gl=US&ceid=US%3Aen" },
+  { name: "Google News · Crypto Catalysts", url: "https://news.google.com/rss/search?q=bitcoin%20crypto%20ETF%20SEC%20CFTC%20liquidation%20hack%20exploit%20inflow%20outflow%20when%3A1d&hl=en-US&gl=US&ceid=US%3Aen" },
+  { name: "Google News · Macro Catalysts", url: "https://news.google.com/rss/search?q=CPI%20PCE%20PPI%20FOMC%20Fed%20rate%20Treasury%20yields%20bitcoin%20crypto%20when%3A1d&hl=en-US&gl=US&ceid=US%3Aen" },
+  { name: "Google News · Market Shock", url: "https://news.google.com/rss/search?q=bitcoin%20liquidation%20hack%20exploit%20depeg%20bankruptcy%20crash%20when%3A1d&hl=en-US&gl=US&ceid=US%3Aen" },
 ];
 
+const MIN_IMPACT = 7.0;
+const MAX_AGE_HOURS = 36;
+
 function clean(v: string) {
-  // Decode entities BEFORE stripping tags. Google News can escape HTML as &lt;a ...&gt;.
   return v
-    .replace(/<!\[CDATA\[|\]\]>/g, "")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&apos;/g, "'")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&#x27;/g, "'")
+    .replace(/<!\[CDATA\[|\]\]>/gi, "")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;|&#x27;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/<a\b[\s\S]*?(?:>|$)/gi, " ")
+    .replace(/<\/a>/gi, " ")
+    .replace(/\bhref\s*=\s*["'][^"']*["']/gi, " ")
+    .replace(/https?:\/\/[^\s"'<>]+/gi, " ")
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
@@ -36,42 +39,72 @@ function tagFor(text: string) {
   if (/ethereum|\beth\b|ethereum etf/.test(x)) return "ETH";
   if (/solana|\bsol\b/.test(x)) return "SOL";
   if (/meme|doge|shib|pepe|bonk|wif/.test(x)) return "MEME";
-  if (/fed|fomc|inflation|cpi|pce|rate|treasury|yield|dollar|liquidity|jobs report|payroll/.test(x)) return "MACRO";
-  if (/stablecoin|defi|dex|lending|on-chain/.test(x)) return "DEFI";
+  if (/stablecoin|defi|dex|lending|on-chain|depeg/.test(x)) return "DEFI";
   if (/sec|cftc|congress|regulation|legislation|approval|approved|ban|lawsuit|court/.test(x)) return "REGULATION";
+  if (/fed|fomc|inflation|cpi|pce|ppi|rate|treasury|yield|dollar|liquidity|jobs report|payroll/.test(x)) return "MACRO";
   return "CRYPTO";
+}
+
+function hasCrypto(x: string) {
+  return /bitcoin|\bbtc\b|ethereum|\beth\b|solana|\bsol\b|crypto|stablecoin|defi|digital asset|altcoin|spot bitcoin etf|ethereum etf/.test(x);
+}
+
+function hasHardCatalyst(x: string) {
+  return /etf|sec|cftc|approval|approved|regulation|lawsuit|liquidation|liquidations|hack|exploit|outflow|inflow|institutional|tariff|sanction|war|emergency|collapse|crash|depeg|bankruptcy|exchange failure/.test(x);
+}
+
+function hasMajorMacro(x: string) {
+  return /\b(cpi|core cpi|pce|core pce|ppi|fomc|fed|fed funds|rate decision|rate cut|rate hike|nonfarm payrolls|nfp|payrolls)\b/.test(x);
+}
+
+function hasPriceShock(x: string) {
+  const move = /(bitcoin|btc|ethereum|eth|solana|sol|crypto).{0,180}(surge|soar|rally|sell-off|selloff|crash|collapse|breakout|breaks above|breaks below|record|all-time high|liquidation|rejected|rejects|support|resistance|plunge|slump)/.test(x);
+  const magnitude = /\d+(?:\.\d+)?\s*%|billion|million|\$[0-9]/.test(x);
+  return move && magnitude;
 }
 
 function isTradingRelevant(text: string) {
   const x = text.toLowerCase();
-  const crypto = /bitcoin|btc|ethereum|eth|solana|sol|crypto|stablecoin|defi|exchange|etf|digital asset|altcoin/.test(x);
-  const macro = /fed|fomc|cpi|pce|inflation|rate cut|rate hike|treasury|yield|liquidity|jobs report|payroll/.test(x) && (crypto || /fed|fomc|cpi|pce|treasury|yield/.test(x));
-  const hardCatalyst = /etf|sec|cftc|approval|approved|regulation|lawsuit|liquidation|liquidations|hack|exploit|outflow|inflow|institutional|tariff|sanction|war|emergency|collapse|crash|depeg|bankruptcy/.test(x);
-  const marketMove = /(bitcoin|btc|ethereum|eth|solana|crypto).{0,120}(surge|soar|rally|sell-off|crash|collapse|breakout|breaks above|breaks below|record|all-time high|liquidation|rejected|rejects|support|resistance)/.test(x);
-  const fluff = /podcast|interview|opinion|price prediction|weekly roundup|best crypto|top crypto to buy|could reach|will reach|sponsored|casino/.test(x);
-  return !fluff && (macro || (crypto && hardCatalyst) || marketMove);
+  const fluff = /podcast|interview|opinion|price prediction|weekly roundup|best crypto|top crypto to buy|could reach|will reach|sponsored|casino|analyst says|expert predicts/.test(x);
+  if (fluff) return false;
+
+  const crypto = hasCrypto(x);
+  const hardCatalyst = hasHardCatalyst(x);
+  const macro = hasMajorMacro(x);
+  const priceShock = hasPriceShock(x);
+
+  // A crypto story needs a concrete catalyst or measurable market shock.
+  if (crypto && (hardCatalyst || priceShock)) return true;
+
+  // Macro is allowed only when it is an actual policy/inflation/labor catalyst and
+  // has a plausible crypto transmission path; generic stock-market commentary is out.
+  if (macro && (crypto || /treasury|yield|dollar|liquidity|oil/.test(x))) return true;
+
+  return false;
 }
 
 function score(text: string, source: string) {
   const x = text.toLowerCase();
-  let v = 4;
-  const systemic = ["hack", "exploit", "collapse", "emergency", "stablecoin depeg", "bankruptcy", "exchange failure", "war", "sanction", "ban", "sec lawsuit", "cftc", "fed", "fomc", "cpi", "pce"];
-  const majorCatalyst = ["etf", "sec", "approval", "approved", "regulation", "lawsuit", "liquidation", "liquidations", "outflow", "inflow", "institutional", "tariff", "treasury", "liquidity", "oil", "iran", "hormuz", "yen"];
-  const marketMove = ["surge", "soar", "rally", "sell-off", "crash", "collapse", "breakout", "breaks above", "breaks below", "record", "all-time high", "rejected", "rejects", "support", "resistance"];
-  const magnitude = ["billion", "$1b", "$2b", "$3b", "$500m", "$400m", "$300m", "$445m", "largest", "massive", "record"];
-  for (const word of systemic) if (x.includes(word)) v += 2;
-  for (const word of majorCatalyst) if (x.includes(word)) v += 1;
-  for (const word of marketMove) if (x.includes(word)) v += .7;
-  for (const word of magnitude) if (x.includes(word)) v += .7;
-  if (/breaking|just in|urgent|now|minutes ago|hours ago/.test(x)) v += .6;
-  if (source === "CoinDesk") v += .35;
-  if (source === "Cointelegraph") v += .2;
+  let v = 5.0;
+  const systemic = /hack|exploit|stablecoin depeg|bankruptcy|exchange failure|war|sanction|emergency|collapse/.test(x);
+  const catalyst = /etf|sec|cftc|approval|approved|lawsuit|liquidation|liquidations|outflow|inflow|institutional|tariff|treasury|liquidity|fomc|fed|cpi|pce|ppi|rate decision|nfp/.test(x);
+  const priceShock = hasPriceShock(x);
+  const magnitude = /\d+(?:\.\d+)?\s*%|billion|million|\$[0-9]/.test(x);
+
+  if (systemic) v += 2.2;
+  if (catalyst) v += 1.3;
+  if (priceShock) v += 1.0;
+  if (magnitude) v += 0.6;
+  if (/breaking|just in|urgent|now|minutes ago|hours ago/.test(x)) v += 0.4;
+  if (source === "CoinDesk") v += 0.3;
+  if (source === "Cointelegraph") v += 0.2;
+
   return Math.max(1, Math.min(10, Math.round(v * 10) / 10));
 }
 
 function direction(text: string): "Risk-on" | "Risk-off" | "Neutral" {
   const x = text.toLowerCase();
-  if (/hack|exploit|ban|lawsuit|liquidation|crash|collapse|sanction|outflow|sell-off|selling|hawkish|depeg|hotter inflation|oil above|oil surge|geopolitical escalation|war/.test(x)) return "Risk-off";
+  if (/hack|exploit|ban|lawsuit|liquidation|crash|collapse|sanction|outflow|sell-off|selloff|selling|hawkish|depeg|hotter inflation|oil above|oil surge|geopolitical escalation|war|plunge|slump/.test(x)) return "Risk-off";
   if (/approval|approved|inflow|surge|rally|adoption|launch|partnership|record|buying|bullish|dovish|lower yields|oil falls|ceasefire/.test(x)) return "Risk-on";
   return "Neutral";
 }
@@ -91,13 +124,12 @@ function windowFor(impact: number) {
 }
 
 function freshness(iso: string) {
-  const age = Math.max(0, Date.now() - new Date(iso).getTime());
-  const hours = age / 3600000;
+  const hours = Math.max(0, (Date.now() - new Date(iso).getTime()) / 3600000);
   if (hours <= 1) return 3;
   if (hours <= 3) return 2.2;
   if (hours <= 6) return 1.2;
-  if (hours <= 12) return .2;
-  if (hours <= 24) return -.8;
+  if (hours <= 12) return 0.2;
+  if (hours <= 24) return -0.8;
   return -2;
 }
 
@@ -108,10 +140,9 @@ function urgencyFor(impact: number, iso: string): "NOW" | "WATCH" | "FADING" {
   return "FADING";
 }
 
-function regimeFor(tag: string, d: string) {
+function regimeFor(d: string) {
   if (d === "Risk-off") return "Cautious";
   if (d === "Risk-on") return "Risk-On";
-  if (tag === "MACRO") return "Cautious";
   return "Mixed";
 }
 
@@ -121,18 +152,16 @@ function biasFor(d: string, tag: string) {
   return tag === "MACRO" ? "Neutral" : "Wait for confirmation";
 }
 
-function sharpHeadline(_tag: string, _d: string, title: string) {
-  return title.replace(/\s+/g, " ").trim();
-}
-
 function whyFor(tag: string, d: string) {
-  if (tag === "MACRO") return d === "Risk-off" ? ["The catalyst changes liquidity or rate expectations across crypto.", "The bearish signal matters most when BTC is already extended or below a key breakout level.", "Core price reaction matters more than the headline after the first volatility burst."] : ["The catalyst can shift liquidity and rate expectations across crypto.", "BTC is the first confirmation layer; alts only matter after BTC absorbs the event.", "The trade is the reaction, not the headline itself."];
+  if (tag === "MACRO") return d === "Risk-off"
+    ? ["The catalyst can reprice liquidity and rate expectations across crypto.", "The bearish signal matters most when BTC is extended or loses a key level.", "Price reaction after the first volatility burst matters more than the headline."]
+    : ["The catalyst can reprice liquidity and rate expectations across crypto.", "BTC is the first confirmation layer; alts matter after BTC absorbs the event.", "The trade is the reaction, not the headline itself."];
   if (tag === "BTC") return ["BTC is the primary market driver and can transmit the catalyst into ETH, SOL and alts.", "A headline without price confirmation is information, not a setup.", "Follow-through and breadth decide whether the move is real."];
   if (tag === "ETH") return ["ETH is a key confirmation layer for alt participation.", "Strength that fails to spread into SOL / broader breadth is weak rotation.", "The setup improves only when relative strength survives the first reaction."];
   return ["This catalyst can move risk appetite beyond the directly affected asset.", "High-beta names amplify both upside and downside when liquidity shifts.", "Price and breadth confirmation determine whether it becomes actionable."];
 }
 
-function guidanceFor(tag: string, d: string) {
+function guidanceFor(d: string) {
   if (d === "Risk-off") return {
     narrative: "Macro caution", setup: "WAIT FOR POST-EVENT PRICE ACTION",
     whatToDo: "Reduce new high-beta exposure and wait for BTC / breadth to stabilize.",
@@ -153,35 +182,48 @@ function guidanceFor(tag: string, d: string) {
 
 function extractItems(xml: string, source: string) {
   const blocks = xml.match(/<item[\s\S]*?<\/item>/gi) ?? [];
-  return blocks.slice(0, 30).map((block) => {
+  return blocks.slice(0, 40).map((block) => {
     const title = clean(block.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? "");
     const link = clean(block.match(/<link[^>]*>([\s\S]*?)<\/link>/i)?.[1] ?? "");
     const published = clean(block.match(/<(?:pubDate|published|updated)[^>]*>([\s\S]*?)<\/(?:pubDate|published|updated)>/i)?.[1] ?? "");
     const description = clean(block.match(/<(?:description|content:encoded)[^>]*>([\s\S]*?)<\/(?:description|content:encoded)>/i)?.[1] ?? "");
     if (!title || !link || !published) return null;
+
     const parsed = new Date(published);
     if (Number.isNaN(parsed.getTime())) return null;
     const publishedAt = parsed.toISOString();
     const fullText = `${title} ${description}`;
     if (!isTradingRelevant(fullText)) return null;
+
     const tag = tagFor(fullText);
     const impact = score(fullText, source);
+    if (impact < MIN_IMPACT) return null;
+
     const dir = direction(fullText);
-    const guidance = guidanceFor(tag, dir);
+    const guidance = guidanceFor(dir);
     const ageHours = Math.max(0, (Date.now() - parsed.getTime()) / 3600000);
+    if (ageHours >= MAX_AGE_HOURS) return null;
+
     const urgency = urgencyFor(impact, publishedAt);
-    const priority = Math.max(1, Math.min(20, impact + freshness(publishedAt) + (urgency === "NOW" ? 1.2 : urgency === "WATCH" ? .4 : 0)));
-    const summary = description ? description.slice(0, 420) : `Live ${tag} catalyst from ${source}. Price reaction and breadth determine whether the headline becomes a trade.`;
+    const priority = Math.max(1, Math.min(20, impact + freshness(publishedAt) + (urgency === "NOW" ? 1.2 : urgency === "WATCH" ? 0.4 : 0)));
+    const summary = description
+      ? description.slice(0, 420)
+      : `Live ${tag} catalyst from ${source}. Price reaction and breadth determine whether the headline becomes a trade.`;
     const why = whyFor(tag, dir);
     why[0] = summary;
+
     return {
-      title, link, source, publishedAt, impact, priority, tag, direction: dir, urgency, window: windowFor(impact),
+      title, link, source, publishedAt, impact, priority, tag, direction: dir, urgency,
+      window: windowFor(impact),
       confidence: Math.min(97, 68 + Math.round(impact * 2) + (source === "CoinDesk" ? 7 : source === "Cointelegraph" ? 4 : 2)),
-      affected: affected(tag), why, whatToDo: guidance.whatToDo, avoid: guidance.avoid, whatToWatch: guidance.watch,
-      invalidation: guidance.invalidations[0], regime: regimeFor(tag, dir), bias: biasFor(dir, tag), sharpHeadline: sharpHeadline(tag, dir, title),
+      affected: affected(tag), why, whatToDo: guidance.whatToDo, avoid: guidance.avoid,
+      whatToWatch: guidance.watch, invalidation: guidance.invalidations[0],
+      regime: regimeFor(dir), bias: biasFor(dir, tag),
+      sharpHeadline: title.replace(/\s+/g, " ").trim(),
       narrative: guidance.narrative, tradableSetup: guidance.setup, finalAction: guidance.final,
       triggerRows: guidance.triggers.map((trigger, i) => ({ watch: guidance.watch[i], trigger, invalidation: guidance.invalidations[i] })),
-      bullCase: guidance.bull, bearCase: guidance.bear, ageHours: Math.round(ageHours * 10) / 10,
+      bullCase: guidance.bull, bearCase: guidance.bear,
+      ageHours: Math.round(ageHours * 10) / 10,
     };
   }).filter(Boolean) as Array<any>;
 }
@@ -195,16 +237,17 @@ async function buildMarketStory() {
     const eth = coins.find((c: any) => c.id === "ethereum");
     const sol = coins.find((c: any) => c.id === "solana");
     if (!btc || !eth || !sol) return null;
+
     const btcCh = Number(btc.price_change_percentage_24h ?? 0);
     const ethCh = Number(eth.price_change_percentage_24h ?? 0);
     const solCh = Number(sol.price_change_percentage_24h ?? 0);
     const spread = Math.max(Math.abs(btcCh - ethCh), Math.abs(btcCh - solCh));
-    const meaningful = Math.abs(btcCh) >= 1.1 || spread >= 2.0;
-    if (!meaningful) return null;
+    if (!(Math.abs(btcCh) >= 1.1 || spread >= 2.0)) return null;
+
     const riskOff = btcCh < -1.1 || (btcCh < 0 && (ethCh < btcCh - 1 || solCh < btcCh - 1));
     const riskOn = btcCh > 1.1 && ethCh > 0 && solCh > 0;
     const dir: "Risk-on" | "Risk-off" | "Neutral" = riskOff ? "Risk-off" : riskOn ? "Risk-on" : "Neutral";
-    const impact = Math.min(9.6, Math.max(7.5, 7.2 + Math.abs(btcCh) * .75 + spread * .35));
+    const impact = Math.min(9.6, Math.max(7.0, 7.0 + Math.abs(btcCh) * 0.75 + spread * 0.35));
     const publishedAt = new Date().toISOString();
     const price = Number(btc.current_price ?? 0);
     const title = riskOff
@@ -213,13 +256,17 @@ async function buildMarketStory() {
         ? `BTC ${price.toLocaleString("en-US", { maximumFractionDigits: 0 })} leads a broad crypto rebound at ${btcCh.toFixed(1)}% 24h`
         : `BTC ${price.toLocaleString("en-US", { maximumFractionDigits: 0 })} diverges from ETH/SOL as crypto breadth thins`;
     const summary = `Live market structure: BTC ${btcCh >= 0 ? "+" : ""}${btcCh.toFixed(1)}%, ETH ${ethCh >= 0 ? "+" : ""}${ethCh.toFixed(1)}%, SOL ${solCh >= 0 ? "+" : ""}${solCh.toFixed(1)}% over 24h. This is a chart-derived alert; no external headline is required.`;
-    const guidance = guidanceFor("BTC", dir);
+    const guidance = guidanceFor(dir);
+
     return {
-      title, link: "", source: "Live Market Structure", publishedAt, impact, priority: impact + 2.5, tag: "BTC", direction: dir, urgency: "NOW" as const,
-      window: windowFor(impact), confidence: 82, affected: ["BTC", "ETH", "SOL", "ALT"], why: [summary, ...whyFor("BTC", dir).slice(1)],
-      whatToDo: guidance.whatToDo, avoid: guidance.avoid, whatToWatch: guidance.watch, invalidation: guidance.invalidations[0],
-      regime: regimeFor("BTC", dir), bias: biasFor(dir, "BTC"), sharpHeadline: title, narrative: guidance.narrative, tradableSetup: guidance.setup,
-      finalAction: guidance.final, triggerRows: guidance.triggers.map((trigger, i) => ({ watch: guidance.watch[i], trigger, invalidation: guidance.invalidations[i] })),
+      title, link: "", source: "Live Market Structure", publishedAt, impact, priority: impact + 2.5,
+      tag: "BTC", direction: dir, urgency: "NOW" as const, window: windowFor(impact), confidence: 82,
+      affected: ["BTC", "ETH", "SOL", "ALT"], why: [summary, ...whyFor("BTC", dir).slice(1)],
+      whatToDo: guidance.whatToDo, avoid: guidance.avoid, whatToWatch: guidance.watch,
+      invalidation: guidance.invalidations[0], regime: regimeFor(dir), bias: biasFor(dir, "BTC"),
+      sharpHeadline: title, narrative: guidance.narrative, tradableSetup: guidance.setup,
+      finalAction: guidance.final,
+      triggerRows: guidance.triggers.map((trigger, i) => ({ watch: guidance.watch[i], trigger, invalidation: guidance.invalidations[i] })),
       bullCase: guidance.bull, bearCase: guidance.bear, ageHours: 0,
     };
   } catch {
@@ -231,20 +278,20 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const forceRefresh = url.searchParams.has("scheduled_refresh");
   const store = getStore("revedge-intelligence");
-  const minImpact = 7.0;
+
   const sanitizeSnapshot = (snapshot: any) => ({
     ...snapshot,
     stories: Array.isArray(snapshot?.stories)
-      ? snapshot.stories.filter((story: any) => Number(story?.impact ?? 0) >= minImpact && (!story?.ageHours || story.ageHours < 36)).slice(0, 5)
+      ? snapshot.stories.filter((story: any) => Number(story?.impact ?? 0) >= MIN_IMPACT && Number(story?.ageHours ?? 0) < MAX_AGE_HOURS).slice(0, 5)
       : [],
   });
 
   if (!forceRefresh) {
     try {
       const intelligence = await store.get("latest-intelligence", { type: "json" });
-      if (intelligence) {
-        return NextResponse.json(sanitizeSnapshot(intelligence), { headers: { "Cache-Control": "public, max-age=0, s-maxage=15, stale-while-revalidate=30", "CDN-Cache-Control": "public, max-age=15, stale-while-revalidate=30", "Netlify-CDN-Cache-Control": "public, durable, max-age=15, stale-while-revalidate=30" } });
-      }
+      if (intelligence) return NextResponse.json(sanitizeSnapshot(intelligence), {
+        headers: { "Cache-Control": "public, max-age=0, s-maxage=15, stale-while-revalidate=30", "CDN-Cache-Control": "public, max-age=15, stale-while-revalidate=30", "Netlify-CDN-Cache-Control": "public, durable, max-age=15, stale-while-revalidate=30" }
+      });
       const cached = await store.get("latest-news", { type: "json" });
       if (cached) return NextResponse.json(sanitizeSnapshot(cached));
     } catch {
@@ -253,10 +300,11 @@ export async function GET(request: Request) {
   }
 
   const responses = await Promise.allSettled(FEEDS.map(async (feed) => {
-    const r = await fetch(feed.url, { headers: { "User-Agent": "REVESENSE/1.0" }, cache: "no-store" });
+    const r = await fetch(feed.url, { headers: { "User-Agent": "HALVER/1.0" }, cache: "no-store" });
     if (!r.ok) throw new Error(`feed ${feed.name} ${r.status}`);
     return extractItems(await r.text(), feed.name);
   }));
+
   const stories = responses.flatMap((r) => r.status === "fulfilled" ? r.value : []);
   const marketStory = await buildMarketStory();
   if (marketStory) stories.push(marketStory);
@@ -269,14 +317,14 @@ export async function GET(request: Request) {
   }
 
   const curated = [...unique.values()]
-    .filter((story) => story.ageHours < 36 && story.impact >= minImpact)
+    .filter((story) => story.ageHours < MAX_AGE_HOURS && story.impact >= MIN_IMPACT)
     .sort((a, b) => (b.priority - a.priority) || (new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()))
     .slice(0, 5);
 
   const hasNow = curated.some((story) => story.urgency === "NOW");
   const result = {
     stories: curated,
-    sources: [...FEEDS.map((feed) => feed.name), "Live Market Structure"],
+    sources: FEEDS.map((feed) => feed.name).concat("Live Market Structure"),
     updatedAt: new Date().toISOString(),
     mode: hasNow ? "HIGH_ALERT" : "NORMAL",
   };
@@ -285,9 +333,11 @@ export async function GET(request: Request) {
     try {
       await store.setJSON("latest-news", { ...result, refreshedAt: new Date().toISOString() });
     } catch (error) {
-      console.error("REVESENSE snapshot write failed", error);
+      console.error("HALVER snapshot write failed", error);
     }
   }
 
-  return NextResponse.json(result, { headers: { "Cache-Control": "public, max-age=0, s-maxage=15, stale-while-revalidate=30", "CDN-Cache-Control": "public, max-age=15, stale-while-revalidate=30", "Netlify-CDN-Cache-Control": "public, durable, max-age=15, stale-while-revalidate=30" } });
+  return NextResponse.json(result, {
+    headers: { "Cache-Control": "public, max-age=0, s-maxage=15, stale-while-revalidate=30", "CDN-Cache-Control": "public, max-age=15, stale-while-revalidate=30", "Netlify-CDN-Cache-Control": "public, durable, max-age=15, stale-while-revalidate=30" }
+  });
 }
