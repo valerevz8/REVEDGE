@@ -206,7 +206,7 @@ function extractItems(xml: string, source: string) {
     why[0] = summary;
 
     return {
-      title, link, source, publishedAt, impact, priority, tag, direction: dir, urgency,
+      title, link, source, publishedAt, impact, priority, tag, direction: dir, urgency, curationVersion: 3,
       window: windowFor(impact),
       confidence: Math.min(97, 68 + Math.round(impact * 2) + (source === "CoinDesk" ? 7 : source === "Cointelegraph" ? 4 : 2)),
       affected: affected(tag), why, whatToDo: guidance.whatToDo, avoid: guidance.avoid,
@@ -253,7 +253,7 @@ async function buildMarketStory() {
 
     return {
       title, link: "", source: "Live Market Structure", publishedAt, impact, priority: impact + 2.5,
-      tag: "BTC", direction: dir, urgency: "NOW" as const, window: windowFor(impact), confidence: 82,
+      tag: "BTC", direction: dir, urgency: "NOW" as const, curationVersion: 3, window: windowFor(impact), confidence: 82,
       affected: ["BTC", "ETH", "SOL", "ALT"], why: [summary, ...whyFor("BTC", dir).slice(1)],
       whatToDo: guidance.whatToDo, avoid: guidance.avoid, whatToWatch: guidance.watch,
       invalidation: guidance.invalidations[0], regime: regimeFor(dir), bias: biasFor(dir, "BTC"),
@@ -275,18 +275,18 @@ export async function GET(request: Request) {
   const sanitizeSnapshot = (snapshot: any) => ({
     ...snapshot,
     stories: Array.isArray(snapshot?.stories)
-      ? snapshot.stories.filter((story: any) => Number(story?.impact ?? 0) >= MIN_IMPACT && Number(story?.ageHours ?? 0) < MAX_AGE_HOURS).slice(0, 5)
+      ? snapshot.stories.filter((story: any) => story?.curationVersion === 3 && Number(story?.impact ?? 0) >= MIN_IMPACT && Number(story?.ageHours ?? 0) < MAX_AGE_HOURS).slice(0, 5)
       : [],
   });
 
   if (!forceRefresh) {
     try {
       const intelligence = await store.get("latest-intelligence", { type: "json" });
-      if (intelligence) return NextResponse.json(sanitizeSnapshot(intelligence), {
+      if (intelligence?.stories?.some((story: any) => story?.curationVersion === 3)) return NextResponse.json(sanitizeSnapshot(intelligence), {
         headers: { "Cache-Control": "public, max-age=0, s-maxage=15, stale-while-revalidate=30", "CDN-Cache-Control": "public, max-age=15, stale-while-revalidate=30", "Netlify-CDN-Cache-Control": "public, durable, max-age=15, stale-while-revalidate=30" }
       });
       const cached = await store.get("latest-news", { type: "json" });
-      if (cached) return NextResponse.json(sanitizeSnapshot(cached));
+      if (cached?.stories?.some((story: any) => story?.curationVersion === 3)) return NextResponse.json(sanitizeSnapshot(cached));
     } catch {
       // Bootstrap below if the persistent snapshot is not available yet.
     }
@@ -317,6 +317,7 @@ export async function GET(request: Request) {
   const hasNow = curated.some((story) => story.urgency === "NOW");
   const result = {
     stories: curated,
+    curationVersion: 3,
     sources: FEEDS.map((feed) => feed.name).concat("Live Market Structure"),
     updatedAt: new Date().toISOString(),
     mode: hasNow ? "HIGH_ALERT" : "NORMAL",
