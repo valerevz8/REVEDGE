@@ -31,19 +31,25 @@
 }
 
 @media(max-width:800px) {
-  /* Mobile width: slightly wider than the previous 24px side margin, while preserving a deliberate premium gutter. */
-  .shell { width:calc(100% - 40px) !important; max-width:none !important; margin-left:auto !important; margin-right:auto !important; }
+  /* One canonical mobile gutter: 5% on each side. This makes Predictive Radar,
+     High Impact, Event Clock, and every other shell section align exactly. */
+  .shell {
+    width:90% !important;
+    max-width:none !important;
+    margin-left:auto !important;
+    margin-right:auto !important;
+  }
+
   .navlinks{font-size:14px}.lang,.sign{font-size:13px}.eyebrow{font-size:12px}.hero-main{font-size:clamp(42px,11vw,58px)}.hero-sub{font-size:clamp(20px,5vw,25px)}.hero p{font-size:17px;line-height:1.65}.label{font-size:12px}.sub{font-size:13px}.muted{font-size:14px}.card h3{font-size:22px}.chip{font-size:12px}.sector b{font-size:13px}.sector small{font-size:11px}.newsitem h4{font-size:15px}.newsitem p{font-size:13px}.impactmini{font-size:11px}.time{font-size:12px}.windowline{font-size:11px}.decisionstrip span{font-size:11px}.decisionstrip b{font-size:9px}.positiongrid span{font-size:9px}.positiongrid b{font-size:11px}.preeventclock>span:last-child{font-size:11px}.guidance-row>span{font-size:10px}.guidance-row>b{font-size:13px}
 
-  /* Every adjacent data card gets the same 14px rhythm. */
-  #impact > .grid,
-  #impact > .highdetail,
-  #impact .detailgrid,
-  #impact .positiongrid,
-  .detailgrid,
-  .positiongrid { gap:14px !important; }
-
-  #impact { display:block !important; width:100% !important; max-width:100% !important; }
+  /* High Impact is also a shell section; keep its own wrapper at the exact same 90% width. */
+  #impact {
+    display:block !important;
+    width:90% !important;
+    max-width:none !important;
+    margin-left:auto !important;
+    margin-right:auto !important;
+  }
   #impact > .sectiontitle,
   #impact > .card,
   #impact > .grid,
@@ -52,6 +58,14 @@
   #impact > .card:nth-child(5),
   #impact > .card:nth-child(6),
   #impact > .card:nth-child(7) { width:100% !important; margin-left:0 !important; margin-right:0 !important; }
+
+  /* Uniform 14px breathing room in every nested data grid. */
+  #impact > .grid,
+  #impact > .highdetail,
+  #impact .detailgrid,
+  #impact .positiongrid,
+  .detailgrid,
+  .positiongrid { gap:14px !important; }
   #impact > .grid { display:grid !important; grid-template-columns:1fr !important; }
   #impact > .highdetail { display:block !important; }
   #impact > .highdetail .detailgrid,
@@ -106,6 +120,11 @@
 #impact .short-pos,
 #impact > .highdetail + .card + .card .detail:nth-child(3),
 .re-position .short-pos { background:rgba(192,74,74,.075) !important; border-color:rgba(192,74,74,.24) !important; }
+
+/* Macro Caution / Why It Matters bearish state. */
+#impact .decisionstatus .biasbox.bearish b,
+#impact .decisionstatus .biasbox.bias-riskoff b,
+#impact .decisionstatus .biasbox b { color:var(--red) !important; }
 
 /* Preserve approved gold accent. */
 .brand-edge,
