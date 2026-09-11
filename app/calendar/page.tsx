@@ -6,7 +6,7 @@ export default function CalendarPage() {
     <main>
       <style>{`.brand-logo{display:block;width:138px;height:auto;max-height:40px;object-fit:contain}@media(max-width:800px){.brand-logo{width:116px;max-height:34px}}`}</style>
       <header className="shell nav">
-        <a className="brand" href="/" aria-label="HALVER"><img className="brand-logo" src="/halver-logo.svg" alt="HALVER" /></a>
+        <a className="brand" href="/" aria-label="HALVER"><img className="brand-logo" src="/halver-logo.svg?v=2" alt="HALVER" width="138" height="39" /></a>
         <nav className="navlinks"><a href="/">High Impact</a><a href="/calendar" className="active-nav">Event Calendar</a></nav>
         <div className="navright"><HeaderPreferences /><a className="sign re-back" href="/" aria-label="Back to HALVER" title="Back to HALVER"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg></a></div>
       </header>
