@@ -17,7 +17,7 @@ export default async () => {
     cache: "no-store",
     headers: {
       "Cache-Control": "no-cache",
-      "User-Agent": "REVEDGE-Scheduler/1.0",
+      "User-Agent": "HALVER-Scheduler/1.0",
     },
   });
 
@@ -39,7 +39,7 @@ export default async () => {
     store.setJSON("event-state", result.state),
   ]);
 
-  console.log("REVEDGE intelligence snapshot refreshed", {
+  console.log("HALVER intelligence snapshot refreshed", {
     events: result.snapshot.events.length,
     active: result.snapshot.activeCount,
     watch: result.snapshot.watchCount,
