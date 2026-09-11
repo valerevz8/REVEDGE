@@ -1,0 +1,31 @@
+/* FINAL MOBILE + BRAND POLISH */
+
+/* 1) Macro Caution bearish state: use the same deep blood-red system as the rest of HALVER. */
+#impact .decisionstatus.bias-riskoff .biasbox {
+  background:rgba(192,74,74,.09) !important;
+  border-color:rgba(192,74,74,.55) !important;
+  box-shadow:inset 4px 0 0 #c04a4a !important;
+}
+#impact .decisionstatus.bias-riskoff .biasbox b {
+  color:#c04a4a !important;
+}
+
+/* 2) Mobile: Impact Intelligence and Trader Guidance must be two distinct stacked cards. */
+@media(max-width:800px) {
+  #impact > .highdetail {
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:14px !important;
+    margin-top:14px !important;
+  }
+  #impact > .highdetail > .card {
+    width:100% !important;
+    min-width:0 !important;
+    margin:0 !important;
+  }
+}
+
+/* 3) Hero hierarchy: give the gold line and main headline more breathing room. */
+.hero-main + .hero-sub {
+  margin-top:12px !important;
+}
