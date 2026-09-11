@@ -179,6 +179,11 @@
   color:#b7b3a9 !important;
 }
 
+/* Force the supplied PNG to render even if the legacy data URI in the page is stale/broken. */
+.brand-logo {
+  content:url('/halver-logo.png') !important;
+}
+
 .brand-edge,
 :root[data-theme="dark"] .brand-edge,
 :root[data-theme="light"] .brand-edge,
