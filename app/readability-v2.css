@@ -1,0 +1,110 @@
+/* REVESENSE readability pass v2 — focused on the High Impact detail cards. */
+:root[data-theme="dark"] {
+  --line:#4a4843;
+}
+
+/* Make the Risk Flag / Base-Risk-Worst / Confirmation-Invalidation block breathe. */
+:root[data-theme="dark"] .highdetail .card {
+  border-color:#4a4843;
+}
+
+:root[data-theme="dark"] .highdetail .card h3 {
+  font-size:25px;
+  line-height:1.15;
+  margin-bottom:11px;
+}
+
+:root[data-theme="dark"] .highdetail .muted {
+  color:#c8c4bb;
+  font-size:14px;
+  line-height:1.65;
+}
+
+:root[data-theme="dark"] .highdetail .detail {
+  border-color:#4a4843;
+}
+
+:root[data-theme="dark"] .highdetail .detail span {
+  color:#aaa69e;
+  font-size:11px;
+}
+
+:root[data-theme="dark"] .highdetail .detail b {
+  color:#f0ede5;
+  font-size:14px;
+  line-height:1.55;
+}
+
+:root[data-theme="dark"] .highdetail .actionrow {
+  color:#c8c4bb;
+  font-size:13px;
+  line-height:1.6;
+}
+
+:root[data-theme="dark"] .highdetail .actionrow strong {
+  color:#f0ede5;
+}
+
+/* The risk/base-case cards in the screenshot sit above the confirmation row. */
+:root[data-theme="dark"] #impact > .card {
+  border-color:#4a4843;
+}
+
+:root[data-theme="dark"] #impact > .card .muted {
+  color:#c8c4bb;
+  font-size:14px;
+  line-height:1.65;
+}
+
+:root[data-theme="dark"] #impact > .card h3 {
+  font-size:25px;
+  line-height:1.15;
+}
+
+/* Small labels: larger + lighter, but never gold. */
+:root[data-theme="dark"] #impact .label,
+:root[data-theme="dark"] #impact .sub,
+:root[data-theme="dark"] #impact .detail span,
+:root[data-theme="dark"] #impact .positiongrid span {
+  color:#aaa69e;
+  font-size:11px;
+}
+
+/* Preserve approved title/accent gold exactly. */
+.brand-edge,
+:root[data-theme="dark"] .brand-edge,
+:root[data-theme="light"] .brand-edge,
+.hero-sub,
+:root[data-theme="dark"] .hero-sub {
+  color:var(--gold-soft) !important;
+}
+
+/* Mobile: another ~20% on readable copy; headings stay strong without becoming oversized. */
+@media(max-width:800px) {
+  :root[data-theme="dark"] .highdetail .card h3,
+  :root[data-theme="dark"] #impact > .card h3 {
+    font-size:24px;
+  }
+
+  :root[data-theme="dark"] .highdetail .muted,
+  :root[data-theme="dark"] #impact > .card .muted {
+    font-size:15px;
+    line-height:1.65;
+  }
+
+  :root[data-theme="dark"] .highdetail .detail span,
+  :root[data-theme="dark"] #impact .detail span,
+  :root[data-theme="dark"] #impact .label,
+  :root[data-theme="dark"] #impact .sub {
+    font-size:12px;
+  }
+
+  :root[data-theme="dark"] .highdetail .detail b {
+    font-size:14px;
+  }
+
+  :root[data-theme="dark"] .highdetail .actionrow {
+    font-size:14px;
+    line-height:1.6;
+  }
+}
