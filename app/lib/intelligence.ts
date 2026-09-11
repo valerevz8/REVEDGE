@@ -1,176 +1,42 @@
+import { SCHEDULED_CATALYSTS, catalystPhase, catalystUtcMs } from "./catalysts";
+
 export type Lifecycle = "PRE-EVENT" | "LIVE" | "POST-EVENT" | "NEW · NOW" | "NEW · WATCH" | "ACTIVE · NOW" | "ACTIVE · WATCH" | "FADING · WATCH" | "FADING" | "RESOLVED";
 export type StateChange = "NEW" | "ESCALATED" | "CONFIRMED" | "UNCHANGED" | "FADING" | "DOWNGRADED";
 export type Bias = "Risk-on" | "Risk-off" | "Neutral";
+export type MarketContext = { coins?: { symbol: string; change: number }[]; total3Change?: number; macro?: { dxyChange?: number; us10yChange?: number; nasdaqChange?: number; oilChange?: number } };
 
 export type RawStory = {
-  title: string;
-  source: string;
-  link: string;
-  publishedAt: string;
-  impact: number;
-  priority?: number;
-  tag: string;
-  direction: Bias;
-  urgency?: "NOW" | "WATCH" | "FADING";
-  window: string;
-  confidence: number;
-  affected: string[];
-  why: string[];
-  whatToDo: string;
-  avoid: string;
-  whatToWatch: string[];
-  invalidation: string;
-  regime: string;
-  bias: string;
-  sharpHeadline: string;
-  narrative: string;
-  tradableSetup: string;
-  finalAction: string;
-  triggerRows: { watch: string; trigger: string; invalidation: string }[];
-  bullCase: string;
-  bearCase: string;
-  ageHours?: number;
-  scheduled?: boolean;
-  eventId?: string;
-  eventTime?: number;
-  catalystPhase?: "PRE-EVENT" | "LIVE" | "POST-EVENT" | "RESOLVED";
-  catalystCategory?: string;
-  scenarios?: { label: string; condition: string; marketPath: string; bias: Bias }[];
-  preEventBias?: Bias;
-  preEventConfidence?: number;
-  expected?: string;
-  previous?: string;
+  title:string; source:string; link:string; publishedAt:string; impact:number; priority?:number; tag:string; direction:Bias; urgency?:"NOW"|"WATCH"|"FADING"; window:string; confidence:number; affected:string[]; why:string[]; whatToDo:string; avoid:string; whatToWatch:string[]; invalidation:string; regime:string; bias:string; sharpHeadline:string; narrative:string; tradableSetup:string; finalAction:string; triggerRows:{watch:string;trigger:string;invalidation:string}[]; bullCase:string; bearCase:string; ageHours?:number;
+  scheduled?:boolean; eventId?:string; eventTime?:number; catalystPhase?:"PRE-EVENT"|"LIVE"|"POST-EVENT"|"RESOLVED"; catalystCategory?:string; scenarios?:{label:string;condition:string;marketPath:string;bias:Bias}[]; preEventBias?:Bias; preEventConfidence?:number; expected?:string; previous?:string;
 };
+export type IntelligenceEvent = RawStory & { eventId:string; lifecycle:Lifecycle; stateChange:StateChange; firstSeenAt:string; lastSeenAt:string; corroboration:number; sourceCount:number; sources:string[]; confirmation:number; impact:number; priority:number; ageHours:number; related:{title:string;source:string;publishedAt:string;link:string}[] };
+export type EventState = { eventId:string; firstSeenAt:string; lastSeenAt:string; lifecycle:Lifecycle; impact:number; corroboration:number; sourceCount:number };
+export type IntelligenceSnapshot = { ok:true; generatedAt:string; engine:"REVEDGE Intelligence Engine v3"; methodology:string; activeCount:number; watchCount:number; escalations:number; events:IntelligenceEvent[]; stories:IntelligenceEvent[] };
 
-export type IntelligenceEvent = RawStory & {
-  eventId: string;
-  lifecycle: Lifecycle;
-  stateChange: StateChange;
-  firstSeenAt: string;
-  lastSeenAt: string;
-  corroboration: number;
-  sourceCount: number;
-  sources: string[];
-  confirmation: number;
-  impact: number;
-  priority: number;
-  ageHours: number;
-  related: { title: string; source: string; publishedAt: string; link: string }[];
-};
+const STOPWORDS=new Set(["the","a","an","to","of","for","and","in","on","with","as","is","are","by","from","at","into","after","before","over","under","this","that","its","their","will","can","may","new","says","said","amid","while","crypto","market"]);
+function tokens(text:string){return text.toLowerCase().replace(/[^a-z0-9\s]/g," ").split(/\s+/).filter((t)=>t.length>2&&!STOPWORDS.has(t));}
+function tokenSet(text:string){return new Set(tokens(text));}
+function similarity(a:RawStory,b:RawStory){if(a.scheduled||b.scheduled)return 0;const aa=tokenSet(a.title),bb=tokenSet(b.title);if(!aa.size||!bb.size)return 0;let common=0;aa.forEach((t)=>{if(bb.has(t))common++;});const union=new Set([...aa,...bb]).size;const j=common/Math.max(1,union);const c=common/Math.max(1,Math.min(aa.size,bb.size));const same=a.tag===b.tag||a.affected.some((x)=>b.affected.includes(x));return j*.55+c*.35+(same?.1:0);}
+function eventKey(story:RawStory){return story.eventId||`${story.tag}:${tokens(story.title).slice(0,8).join("-")||"event"}`.slice(0,120);}
+function ageHours(story:RawStory){return Math.max(0,(Date.now()-new Date(story.publishedAt).getTime())/3600000);}
+function freshnessScore(hours:number){if(hours<=1)return 3;if(hours<=3)return 2.2;if(hours<=6)return 1.2;if(hours<=12)return .2;if(hours<=24)return-.8;return-2;}
+function catalystPriority(story:RawStory){const hours=story.eventTime?(story.eventTime-Date.now())/3600000:Infinity;const proximity=hours>72?.3:hours>24?.8:hours>6?1.5:hours>3?2:hours>1?2.5:hours>0?3:hours>=-2?3.2:1;return Math.max(1,Math.min(20,Number(story.impact??0)+proximity+(Number(story.confidence??0)-50)*.025));}
+function priorityFor(impact:number,hours:number,sourceCount:number,confirmation:number){return Math.max(1,Math.min(20,impact+freshnessScore(hours)+Math.min(2,Math.max(0,sourceCount-1)*.55)+Math.min(1.5,confirmation*.15)));}
+function confirmationFor(sourceCount:number,corroboration:number){return Math.min(100,Math.round(58+Math.min(4,sourceCount)*7+Math.min(4,corroboration-1)*3));}
+function lifecycleFor(story:RawStory,isNew:boolean):Lifecycle{if(story.scheduled&&story.eventTime){const h=(story.eventTime-Date.now())/3600000;return h>0?"PRE-EVENT":h>=-.25?"LIVE":h>=-2?"POST-EVENT":"RESOLVED";}const h=ageHours(story);if(isNew&&h<=1&&story.impact>=7.5)return"NEW · NOW";if(isNew&&h<=6&&story.impact>=7)return"NEW · WATCH";if(h<=3&&story.impact>=7.5)return"ACTIVE · NOW";if(h<=12&&story.impact>=7)return"ACTIVE · WATCH";if(h<=24&&story.impact>=6.5)return"FADING · WATCH";if(h>36)return"RESOLVED";return"FADING";}
+function stateChangeFor(previous:EventState|undefined,current:IntelligenceEvent):StateChange{if(!previous)return"NEW";if(current.scheduled&&previous.lifecycle==="PRE-EVENT"&&current.lifecycle==="LIVE")return"ESCALATED";if(current.scheduled&&previous.lifecycle==="LIVE"&&current.lifecycle==="POST-EVENT")return"CONFIRMED";const di=current.impact-previous.impact;const dc=current.corroboration-previous.corroboration;const fading=previous.lifecycle==="FADING"||previous.lifecycle==="FADING · WATCH";const active=current.lifecycle.includes("NOW");if(di>=.6||dc>=1||(fading&&active))return"ESCALATED";if(current.corroboration>=2&&previous.corroboration<2)return"CONFIRMED";if(current.lifecycle==="FADING"||current.lifecycle==="FADING · WATCH")return di<=-.5?"DOWNGRADED":"FADING";return"UNCHANGED";}
+function mergeGroup(group:RawStory[]){const sorted=[...group].sort((a,b)=>Number(b.priority??b.impact)-Number(a.priority??a.impact)||new Date(b.publishedAt).getTime()-new Date(a.publishedAt).getTime());const primary=sorted[0];const sources=[...new Set(group.map((x)=>x.source))];const hours=ageHours(primary);const maxImpact=Math.max(...group.map((x)=>Number(x.impact??0)));const corroboration=group.length;const confirmation=confirmationFor(sources.length,corroboration);const impact=Math.min(10,Math.round((maxImpact+Math.min(1,(sources.length-1)*.35))*10)/10);return{primary,sources,hours,corroboration,confirmation,impact,related:sorted.slice(0,6)};}
 
-export type EventState = { eventId: string; firstSeenAt: string; lastSeenAt: string; lifecycle: Lifecycle; impact: number; corroboration: number; sourceCount: number };
-export type IntelligenceSnapshot = { ok: true; generatedAt: string; engine: "REVEDGE Intelligence Engine v3"; methodology: string; activeCount: number; watchCount: number; escalations: number; events: IntelligenceEvent[]; stories: IntelligenceEvent[] };
+function currentMarketBias(market?:MarketContext):{bias:Bias;confidence:number}{const btc=market?.coins?.find((c)=>c.symbol==="BTC")?.change??0;const eth=market?.coins?.find((c)=>c.symbol==="ETH")?.change??0;const sol=market?.coins?.find((c)=>c.symbol==="SOL")?.change??0;const breadth=market?.total3Change??0;const dxy=market?.macro?.dxyChange??0;const yields=market?.macro?.us10yChange??0;const nq=market?.macro?.nasdaqChange??0;const raw=btc*.35+eth*.15+sol*.12+breadth*.22+nq*.08-dxy*.05-yields*.05;const score=50+raw*7;if(score>=57)return{bias:"Risk-on",confidence:Math.min(76,Math.round(58+(score-50)*.7))};if(score<=43)return{bias:"Risk-off",confidence:Math.min(76,Math.round(58+(50-score)*.7))};return{bias:"Neutral",confidence:58};}
 
-const STOPWORDS = new Set(["the","a","an","to","of","for","and","in","on","with","as","is","are","by","from","at","into","after","before","over","under","this","that","its","their","will","can","may","new","says","said","amid","while","crypto","market"]);
-function tokens(text: string) { return text.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter((token) => token.length > 2 && !STOPWORDS.has(token)); }
-function tokenSet(text: string) { return new Set(tokens(text)); }
-function similarity(a: RawStory, b: RawStory) {
-  if (a.scheduled || b.scheduled) return 0;
-  const aa = tokenSet(a.title), bb = tokenSet(b.title);
-  if (!aa.size || !bb.size) return 0;
-  let common = 0; aa.forEach((token) => { if (bb.has(token)) common += 1; });
-  const union = new Set([...aa, ...bb]).size;
-  const jaccard = common / Math.max(1, union);
-  const containment = common / Math.max(1, Math.min(aa.size, bb.size));
-  const sameAsset = a.tag === b.tag || a.affected.some((asset) => b.affected.includes(asset));
-  return jaccard * 0.55 + containment * 0.35 + (sameAsset ? 0.1 : 0);
-}
-function eventKey(story: RawStory) { return story.eventId || `${story.tag}:${tokens(story.title).slice(0, 8).join("-") || "event"}`.slice(0, 120); }
-function ageHours(story: RawStory) { return Math.max(0, (Date.now() - new Date(story.publishedAt).getTime()) / 3600000); }
-function freshnessScore(hours: number) { if (hours <= 1) return 3; if (hours <= 3) return 2.2; if (hours <= 6) return 1.2; if (hours <= 12) return .2; if (hours <= 24) return -.8; return -2; }
-function catalystPriority(story: RawStory) {
-  const hours = story.eventTime ? (story.eventTime - Date.now()) / 3600000 : Infinity;
-  const proximity = hours > 72 ? .3 : hours > 24 ? .8 : hours > 6 ? 1.5 : hours > 3 ? 2 : hours > 1 ? 2.5 : hours > 0 ? 3 : hours >= -2 ? 3.2 : 1;
-  return Math.max(1, Math.min(20, Number(story.impact ?? 0) + proximity + (Number(story.confidence ?? 0) - 50) * .025));
-}
-function priorityFor(impact: number, hours: number, sourceCount: number, confirmation: number) {
-  return Math.max(1, Math.min(20, impact + freshnessScore(hours) + Math.min(2, Math.max(0, sourceCount - 1) * .55) + Math.min(1.5, confirmation * .15)));
-}
-function confirmationFor(sourceCount: number, corroboration: number) { return Math.min(100, Math.round(58 + Math.min(4, sourceCount) * 7 + Math.min(4, corroboration - 1) * 3)); }
-function lifecycleFor(story: RawStory, isNew: boolean): Lifecycle {
-  if (story.scheduled && story.eventTime) {
-    const hours = (story.eventTime - Date.now()) / 3600000;
-    if (hours > 0) return "PRE-EVENT";
-    if (hours >= -0.25) return "LIVE";
-    if (hours >= -2) return "POST-EVENT";
-    return "RESOLVED";
-  }
-  const hours = ageHours(story);
-  if (isNew && hours <= 1 && story.impact >= 7.5) return "NEW · NOW";
-  if (isNew && hours <= 6 && story.impact >= 7) return "NEW · WATCH";
-  if (hours <= 3 && story.impact >= 7.5) return "ACTIVE · NOW";
-  if (hours <= 12 && story.impact >= 7) return "ACTIVE · WATCH";
-  if (hours <= 24 && story.impact >= 6.5) return "FADING · WATCH";
-  if (hours > 36) return "RESOLVED";
-  return "FADING";
-}
-function stateChangeFor(previous: EventState | undefined, current: IntelligenceEvent): StateChange {
-  if (!previous) return "NEW";
-  if (current.scheduled && previous.lifecycle === "PRE-EVENT" && current.lifecycle === "LIVE") return "ESCALATED";
-  if (current.scheduled && previous.lifecycle === "LIVE" && current.lifecycle === "POST-EVENT") return "CONFIRMED";
-  const impactDelta = current.impact - previous.impact;
-  const corroborationDelta = current.corroboration - previous.corroboration;
-  const wasFading = previous.lifecycle === "FADING" || previous.lifecycle === "FADING · WATCH";
-  const nowActive = current.lifecycle === "ACTIVE · NOW" || current.lifecycle === "ACTIVE · WATCH" || current.lifecycle === "NEW · NOW";
-  if (impactDelta >= 0.6 || corroborationDelta >= 1 || (wasFading && nowActive)) return "ESCALATED";
-  if (current.corroboration >= 2 && previous.corroboration < 2) return "CONFIRMED";
-  if (current.lifecycle === "FADING" || current.lifecycle === "FADING · WATCH") return impactDelta <= -0.5 ? "DOWNGRADED" : "FADING";
-  return "UNCHANGED";
-}
-function mergeGroup(group: RawStory[]) {
-  const sorted = [...group].sort((a, b) => Number(b.priority ?? b.impact ?? 0) - Number(a.priority ?? a.impact ?? 0) || new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
-  const primary = sorted[0];
-  const sources = [...new Set(group.map((item) => item.source))];
-  const hours = ageHours(primary);
-  const maxImpact = Math.max(...group.map((item) => Number(item.impact ?? 0)));
-  const corroboration = group.length;
-  const confirmation = confirmationFor(sources.length, corroboration);
-  const impact = Math.min(10, Math.round((maxImpact + Math.min(1, (sources.length - 1) * 0.35)) * 10) / 10);
-  return { primary, sources, hours, corroboration, confirmation, impact, related: sorted.slice(0, 6) };
-}
+function scheduledStories(market?:MarketContext):RawStory[]{const prior=currentMarketBias(market);const now=Date.now();return SCHEDULED_CATALYSTS.map((c)=>{const eventTime=catalystUtcMs(c);const phase=catalystPhase(eventTime,now);if(phase==="RESOLVED")return null;const h=(eventTime-now)/3600000;const impact=c.impact==="HIGH"?9.5:7.8;const bias=phase==="PRE-EVENT"?prior.bias:(c.scenarios.find((s)=>s.label.includes("IN LINE")||s.label.includes("UNCHANGED"))?.bias??"Neutral");const confidence=phase==="PRE-EVENT"?prior.confidence:62;const urgency=phase==="LIVE"||h<=1?"NOW":h<=12?"WATCH":"FADING";const watch=["BTC","DXY / USD","U.S. yields","Nasdaq","ETH / SOL breadth"];const confirmation=["BTC holds the catalyst level","DXY / yields confirm the risk direction","ETH / SOL and TOTAL3 breadth confirm"];const invalidation=["BTC loses the key level","Cross-asset reaction contradicts the bias","Breadth contracts after the first move"];return{title:c.title,source:c.source,link:"",publishedAt:new Date(now).toISOString(),impact,priority:0,tag:c.category,direction:bias,urgency,window:"6–24H",confidence,affected:["BTC","ETH","SOL","ALT"],why:[c.note,"Scheduled catalysts are known before release; direction is a probability, not a certainty.",c.scenarios.map((s)=>`${s.label}: ${s.marketPath}`).join(" · ")],whatToDo:phase==="PRE-EVENT"?"Prepare levels now. Do not pre-position solely on the headline; wait for BTC and cross-asset confirmation.":"Trade the confirmed reaction, not the first headline.",avoid:"Do not treat the event as an automatic entry.",whatToWatch:watch,invalidation:invalidation[0],regime:bias==="Risk-off"?"Cautious":bias==="Risk-on"?"Risk-On":"Mixed",bias:bias==="Risk-on"?"Bullish":bias==="Risk-off"?"Bearish":"Neutral",sharpHeadline:c.title,narrative:phase==="PRE-EVENT"?"Pre-event catalyst":phase,tradableSetup:phase==="PRE-EVENT"?"PREPARE — WAIT FOR THE REACTION":"TRADE THE CONFIRMATION",finalAction:phase==="PRE-EVENT"?"WAIT FOR THE CONFIRMATION":bias==="Risk-off"?"REDUCE RISK / WAIT":"TRADE THE CONFIRMATION",triggerRows:confirmation.map((trigger,i)=>({watch:watch[i],trigger,invalidation:invalidation[i]})),bullCase:c.scenarios.find((s)=>s.bias==="Risk-on")?.marketPath??"BTC holds and breadth expands",bearCase:c.scenarios.find((s)=>s.bias==="Risk-off")?.marketPath??"BTC loses support and breadth contracts",ageHours:0,scheduled:true,eventId:c.id,eventTime,catalystPhase:phase,catalystCategory:c.category,scenarios:c.scenarios,preEventBias:bias,preEventConfidence:confidence};}).filter(Boolean) as RawStory[];}
 
-export function buildIntelligence(rawStories: RawStory[], previous: EventState[] = []): { snapshot: IntelligenceSnapshot; state: EventState[] } {
-  const groups: RawStory[][] = [];
-  for (const story of rawStories) {
-    const match = groups.find((group) => similarity(group[0], story) >= 0.52);
-    if (match) match.push(story); else groups.push([story]);
-  }
-  const previousById = new Map(previous.map((item) => [item.eventId, item]));
-  const now = new Date().toISOString();
-  const events = groups.map((group) => {
-    const merged = mergeGroup(group);
-    const primary = merged.primary;
-    const id = eventKey(primary);
-    const previousEvent = previousById.get(id);
-    const firstSeenAt = previousEvent?.firstSeenAt ?? now;
-    const lifecycle = lifecycleFor(primary, !previousEvent);
-    const priority = primary.scheduled ? catalystPriority(primary) : priorityFor(merged.impact, merged.hours, merged.sources.length, merged.confirmation);
-    const event: IntelligenceEvent = {
-      ...primary,
-      eventId: id,
-      lifecycle,
-      stateChange: "UNCHANGED",
-      firstSeenAt,
-      lastSeenAt: now,
-      corroboration: merged.corroboration,
-      sourceCount: merged.sources.length,
-      sources: merged.sources,
-      confirmation: merged.confirmation,
-      impact: merged.impact,
-      priority,
-      ageHours: Math.round(merged.hours * 10) / 10,
-      related: merged.related.map((item) => ({ title: item.title, source: item.source, publishedAt: item.publishedAt, link: item.link })),
-    };
-    event.stateChange = stateChangeFor(previousEvent, event);
-    return event;
-  }).filter((event) => event.scheduled ? event.lifecycle !== "RESOLVED" : event.ageHours < 36 && event.impact >= 7).sort((a, b) => b.priority - a.priority || b.impact - a.impact).slice(0, 12);
-
-  const activeCount = events.filter((event) => event.lifecycle === "LIVE" || event.lifecycle.includes("NOW")).length;
-  const watchCount = events.filter((event) => event.lifecycle === "PRE-EVENT" || event.lifecycle.includes("WATCH")).length;
-  const escalations = events.filter((event) => ["ESCALATED", "CONFIRMED", "NEW"].includes(event.stateChange)).length;
-  const state = events.map((event) => ({ eventId: event.eventId, firstSeenAt: event.firstSeenAt, lastSeenAt: event.lastSeenAt, lifecycle: event.lifecycle, impact: event.impact, corroboration: event.corroboration, sourceCount: event.sourceCount }));
-  return {
-    snapshot: { ok: true, generatedAt: now, engine: "REVEDGE Intelligence Engine v3", methodology: "scheduled catalysts × proximity × market regime × surprise scenarios × post-event confirmation", activeCount, watchCount, escalations, events, stories: events },
-    state,
-  };
+export function buildIntelligence(rawStories:RawStory[],previous:EventState[]=[],market?:MarketContext):{snapshot:IntelligenceSnapshot;state:EventState[]}{
+  const input=[...rawStories,...scheduledStories(market)];
+  const groups:RawStory[][]=[];
+  for(const story of input){const match=groups.find((g)=>similarity(g[0],story)>=.52);if(match)match.push(story);else groups.push([story]);}
+  const previousById=new Map(previous.map((x)=>[x.eventId,x]));const now=new Date().toISOString();
+  const events=groups.map((group)=>{const merged=mergeGroup(group);const primary=merged.primary;const id=eventKey(primary);const previousEvent=previousById.get(id);const firstSeenAt=previousEvent?.firstSeenAt??now;const lifecycle=lifecycleFor(primary,!previousEvent);const priority=primary.scheduled?catalystPriority(primary):priorityFor(merged.impact,merged.hours,merged.sources.length,merged.confirmation);const event:IntelligenceEvent={...primary,eventId:id,lifecycle,stateChange:"UNCHANGED",firstSeenAt,lastSeenAt:now,corroboration:merged.corroboration,sourceCount:merged.sources.length,sources:merged.sources,confirmation:merged.confirmation,impact:merged.impact,priority,ageHours:Math.round(merged.hours*10)/10,related:merged.related.map((x)=>({title:x.title,source:x.source,publishedAt:x.publishedAt,link:x.link}))};event.stateChange=stateChangeFor(previousEvent,event);return event;}).filter((event)=>event.scheduled?event.lifecycle!=="RESOLVED":event.ageHours<36&&event.impact>=7).sort((a,b)=>b.priority-a.priority||b.impact-a.impact).slice(0,12);
+  const activeCount=events.filter((e)=>e.lifecycle==="LIVE"||e.lifecycle.includes("NOW")).length;const watchCount=events.filter((e)=>e.lifecycle==="PRE-EVENT"||e.lifecycle.includes("WATCH")).length;const escalations=events.filter((e)=>["ESCALATED","CONFIRMED","NEW"].includes(e.stateChange)).length;const state=events.map((e)=>({eventId:e.eventId,firstSeenAt:e.firstSeenAt,lastSeenAt:e.lastSeenAt,lifecycle:e.lifecycle,impact:e.impact,corroboration:e.corroboration,sourceCount:e.sourceCount}));
+  return{snapshot:{ok:true,generatedAt:now,engine:"REVEDGE Intelligence Engine v3",methodology:"scheduled catalysts × proximity × current market regime × surprise scenarios × post-event confirmation",activeCount,watchCount,escalations,events,stories:events},state};
 }
