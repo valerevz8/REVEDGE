@@ -9,3 +9,110 @@
   -webkit-appearance: none;
   appearance: none;
 }
+
+/* REVESENSE typography/readability refinement.
+   Keep the approved gold unchanged; only text sizing/contrast and dividers change. */
+:root[data-theme="dark"] {
+  --line:#403e39;
+}
+
+:root[data-theme="dark"] .hero p,
+:root[data-theme="dark"] .muted,
+:root[data-theme="dark"] .next-note,
+:root[data-theme="dark"] .newsitem p,
+:root[data-theme="dark"] .actionrow,
+:root[data-theme="dark"] .windowline,
+:root[data-theme="dark"] .impactscoreline span,
+:root[data-theme="dark"] .decisionstrip span {
+  color:#bdb9b0;
+}
+
+:root[data-theme="dark"] .navlinks {
+  color:#c4c0b7;
+}
+
+:root[data-theme="dark"] .label,
+:root[data-theme="dark"] .sub,
+:root[data-theme="dark"] .time,
+:root[data-theme="dark"] .sector small,
+:root[data-theme="dark"] .coinidentity small,
+:root[data-theme="dark"] .meme-row>div:first-child span,
+:root[data-theme="dark"] .impactscale,
+:root[data-theme="dark"] .decisionstrip b,
+:root[data-theme="dark"] .positiongrid span,
+:root[data-theme="dark"] .detail span {
+  color:#96928a;
+}
+
+/* Desktop: approximately +20% on supporting copy and small UI text. */
+@media(min-width:801px) {
+  .navlinks { font-size:14px; }
+  .lang { font-size:13px; }
+  .sign { font-size:14px; }
+  .eyebrow { font-size:12px; }
+  .hero p { font-size:18px; line-height:1.65; }
+  .label { font-size:12px; }
+  .sub { font-size:13px; }
+  .regime { font-size:13px; }
+  .coin b { font-size:13px; }
+  .up,.down,.gain,.loss,.positive,.direction { font-size:13px; }
+  .card h3 { font-size:22px; }
+  .muted { font-size:14px; }
+  .chip { font-size:12px; }
+  .sector b { font-size:13px; }
+  .sector small { font-size:11px; }
+  .newsitem h4 { font-size:15px; }
+  .newsitem p { font-size:13px; }
+  .impactmini { font-size:11px; }
+  .time { font-size:12px; }
+  .impactscoreline span { font-size:11px; }
+  .impactscale { font-size:9px; }
+  .decisionstrip span { font-size:12px; }
+  .decisionstrip b { font-size:9px; }
+  .decisioncall b { font-size:16px; }
+  .positiongrid span { font-size:9px; }
+  .positiongrid b { font-size:11px; }
+  .preeventclock>span:last-child { font-size:11px; }
+  .windowline { font-size:11px; }
+  .guidance-row>span { font-size:10px; }
+  .guidance-row>b { font-size:13px; }
+}
+
+/* Mobile: keep the responsive layout but enlarge reading text by roughly 20%. */
+@media(max-width:800px) {
+  .shell { width:min(100% - 28px, 680px); }
+  .navlinks { font-size:14px; }
+  .lang,.sign { font-size:13px; }
+  .eyebrow { font-size:12px; }
+  .hero-main { font-size:clamp(42px,11vw,58px); }
+  .hero-sub { font-size:clamp(20px,5vw,25px); }
+  .hero p { font-size:17px; line-height:1.65; }
+  .label { font-size:12px; }
+  .sub { font-size:13px; }
+  .muted { font-size:14px; }
+  .card h3 { font-size:22px; }
+  .chip { font-size:12px; }
+  .sector b { font-size:13px; }
+  .sector small { font-size:11px; }
+  .newsitem h4 { font-size:15px; }
+  .newsitem p { font-size:13px; }
+  .impactmini { font-size:11px; }
+  .time { font-size:12px; }
+  .windowline { font-size:11px; }
+  .decisionstrip span { font-size:11px; }
+  .decisionstrip b { font-size:9px; }
+  .positiongrid span { font-size:9px; }
+  .positiongrid b { font-size:11px; }
+  .preeventclock>span:last-child { font-size:11px; }
+  .guidance-row>span { font-size:10px; }
+  .guidance-row>b { font-size:13px; }
+}
+
+/* GOLD LOCK — approved gold remains untouched. */
+.brand-edge,
+:root[data-theme="dark"] .brand-edge,
+:root[data-theme="light"] .brand-edge,
+.hero-sub,
+:root[data-theme="dark"] .hero-sub {
+  color:var(--gold-soft) !important;
+}
