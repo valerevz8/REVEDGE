@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 170" role="img" aria-labelledby="t d">
+<defs>
+  <linearGradient id="silver" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f8f8f5"/><stop offset=".42" stop-color="#b8b6b0"/><stop offset=".72" stop-color="#77746d"/><stop offset="1" stop-color="#d7d5cf"/></linearGradient>
+  <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0b6"/><stop offset=".35" stop-color="#d7a957"/><stop offset=".7" stop-color="#9b6d2f"/><stop offset="1" stop-color="#e7c06d"/></linearGradient>
+  <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-opacity=".55"/></filter>
+</defs>
+<title id="t">HALVER</title><desc id="d">HALVER wordmark</desc>
+<g font-family="Arial, Helvetica, sans-serif" font-size="118" font-weight="700" letter-spacing="2" filter="url(#shadow)">
+  <text x="8" y="125" fill="url(#silver)">H</text>
+  <path d="M145 125 L202 8 L259 125 L237 125 L202 50 L167 125 Z" fill="url(#silver)"/>
+  <text x="260" y="125" fill="url(#silver)">L</text>
+  <text x="365" y="125" fill="url(#gold)">V</text>
+  <text x="450" y="125" fill="url(#gold)">E</text>
+  <text x="530" y="125" fill="url(#gold)">R</text>
+</g>
+</svg>
