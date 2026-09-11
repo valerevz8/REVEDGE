@@ -10,7 +10,7 @@
   appearance: none;
 }
 
-/* REVESENSE typography/readability refinement.
+/* HALVER typography/readability refinement.
    Keep the approved gold and existing line/background colors unchanged. */
 :root[data-theme="dark"] {
   --line:#403e39;
@@ -116,6 +116,14 @@
 .re-predictive .re-scenario b { font-size:12px; line-height:1.55; }
 .re-predictive .re-check li { font-size:11px; line-height:1.55; color:#bdb9b0; }
 .re-predictive .re-action p { font-size:11px; color:#bdb9b0; }
+
+/* Light mode: make Confirmation / Invalidation body copy clearly readable. */
+:root[data-theme="light"] .re-check li {
+  color:#777168 !important;
+}
+:root[data-theme="light"] .re-check li::marker {
+  color:var(--gold-soft);
+}
 
 /* Event Calendar position guidance — fix light-mode readability only. */
 :root[data-theme="light"] .re-position span { color:#6f695f !important; font-size:10px; }
