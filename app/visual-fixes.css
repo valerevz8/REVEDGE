@@ -44,7 +44,6 @@
   color:#96928a;
 }
 
-/* Desktop: approximately +20% on supporting copy and small UI text. */
 @media(min-width:801px) {
   .navlinks { font-size:14px; }
   .lang { font-size:13px; }
@@ -78,7 +77,6 @@
   .guidance-row>b { font-size:13px; }
 }
 
-/* Mobile: keep the responsive layout but enlarge reading text by roughly 20%. */
 @media(max-width:800px) {
   .shell { width:min(100% - 28px, 680px); }
   .navlinks { font-size:14px; }
@@ -108,7 +106,6 @@
   .guidance-row>b { font-size:13px; }
 }
 
-/* Predictive Radar — typography only. Do not alter panel, border, or gold colors. */
 .re-predictive .re-kicker { font-size:12px; }
 .re-predictive .re-risk strong { font-size:22px; }
 .re-predictive .re-risk small { font-size:13px; color:#bdb9b0; }
@@ -117,7 +114,6 @@
 .re-predictive .re-check li { font-size:13px; line-height:1.55; color:#bdb9b0; }
 .re-predictive .re-action p { font-size:13px; color:#c8c4bb; }
 
-/* Confirmation / Invalidation — hierarchy + aligned bullets. Headings are intentionally brighter than their copy. */
 .re-predictive .re-check .re-kicker {
   color:#e8e5de !important;
   font-size:12px !important;
@@ -140,40 +136,17 @@
   color:var(--gold-soft) !important;
   line-height:1.55 !important;
 }
+:root[data-theme="light"] .re-predictive .re-check .re-kicker { color:#4b4740 !important; }
+:root[data-theme="light"] .re-predictive .re-check li { color:#777168 !important; }
+:root[data-theme="light"] .re-predictive .re-check li::before { color:var(--gold-soft) !important; }
 
-:root[data-theme="light"] .re-predictive .re-check .re-kicker {
-  color:#4b4740 !important;
-}
-:root[data-theme="light"] .re-predictive .re-check li {
-  color:#777168 !important;
-}
-:root[data-theme="light"] .re-predictive .re-check li::before {
-  color:var(--gold-soft) !important;
-}
+.re-position span { color:#858178 !important; font-size:10px !important; }
+.re-position b { color:#e8e5de !important; font-size:12px !important; line-height:1.55 !important; }
+:root[data-theme="light"] .re-position span { color:#6f695f !important; }
+:root[data-theme="light"] .re-position b { color:#3b3832 !important; }
 
-/* Event Calendar position guidance — readable in both themes. */
-.re-position span {
-  color:#858178 !important;
-  font-size:10px !important;
-}
-.re-position b {
-  color:#e8e5de !important;
-  font-size:12px !important;
-  line-height:1.55 !important;
-}
-:root[data-theme="light"] .re-position span {
-  color:#6f695f !important;
-}
-:root[data-theme="light"] .re-position b {
-  color:#3b3832 !important;
-}
-
-/* Mobile High Impact: every stacked card/table must use the full available width. */
 @media(max-width:800px) {
-  #impact {
-    display:block !important;
-    width:100% !important;
-  }
+  #impact { display:block !important; width:100% !important; }
   #impact > .sectiontitle,
   #impact > .card,
   #impact > .grid,
@@ -183,7 +156,6 @@
     min-width:0 !important;
     box-sizing:border-box !important;
   }
-  /* Override the desktop nth-child widths, whose specificity otherwise wins on mobile. */
   #impact > .card:nth-child(3),
   #impact > .card:nth-child(5),
   #impact > .card:nth-child(6),
@@ -192,15 +164,8 @@
     margin-left:0 !important;
     margin-right:0 !important;
   }
-  #impact > .grid {
-    display:grid !important;
-    grid-template-columns:1fr !important;
-    gap:12px !important;
-  }
-  #impact > .highdetail {
-    display:block !important;
-  }
-  /* Prevent two-column detail blocks from squeezing their copy on narrow screens. */
+  #impact > .grid { display:grid !important; grid-template-columns:1fr !important; gap:12px !important; }
+  #impact > .highdetail { display:block !important; }
   #impact > .highdetail .detailgrid,
   #impact > .highdetail + .card .detailgrid,
   #impact > .highdetail + .card + .card .detailgrid {
@@ -209,7 +174,11 @@
   }
 }
 
-/* GOLD LOCK — approved gold remains untouched. */
+/* The Market Intelligence label is neutral light grey; gold remains reserved for the brand accent. */
+.hero .eyebrow {
+  color:#b7b3a9 !important;
+}
+
 .brand-edge,
 :root[data-theme="dark"] .brand-edge,
 :root[data-theme="light"] .brand-edge,
