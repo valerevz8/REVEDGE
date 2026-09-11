@@ -2,20 +2,10 @@
 .sign,
 :root[data-theme="light"] .sign,
 :root[data-theme="dark"] .sign,
-.navright > .sign {
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  -webkit-appearance: none;
-  appearance: none;
-}
+.navright > .sign { background:transparent !important; border:0 !important; box-shadow:none !important; -webkit-appearance:none; appearance:none; }
 
-/* HALVER typography/readability refinement.
-   Keep the approved gold and existing line/background colors unchanged. */
-:root[data-theme="dark"] {
-  --line:#403e39;
-}
-
+/* HALVER typography/readability refinement. */
+:root[data-theme="dark"] { --line:#403e39; }
 :root[data-theme="dark"] .hero p,
 :root[data-theme="dark"] .muted,
 :root[data-theme="dark"] .next-note,
@@ -23,14 +13,8 @@
 :root[data-theme="dark"] .actionrow,
 :root[data-theme="dark"] .windowline,
 :root[data-theme="dark"] .impactscoreline span,
-:root[data-theme="dark"] .decisionstrip span {
-  color:#bdb9b0;
-}
-
-:root[data-theme="dark"] .navlinks {
-  color:#c4c0b7;
-}
-
+:root[data-theme="dark"] .decisionstrip span { color:#bdb9b0; }
+:root[data-theme="dark"] .navlinks { color:#c4c0b7; }
 :root[data-theme="dark"] .label,
 :root[data-theme="dark"] .sub,
 :root[data-theme="dark"] .time,
@@ -40,216 +24,92 @@
 :root[data-theme="dark"] .impactscale,
 :root[data-theme="dark"] .decisionstrip b,
 :root[data-theme="dark"] .positiongrid span,
-:root[data-theme="dark"] .detail span {
-  color:#96928a;
-}
+:root[data-theme="dark"] .detail span { color:#96928a; }
 
 @media(min-width:801px) {
-  .navlinks { font-size:14px; }
-  .lang { font-size:13px; }
-  .sign { font-size:14px; }
-  .eyebrow { font-size:12px; }
-  .hero p { font-size:18px; line-height:1.65; }
-  .label { font-size:12px; }
-  .sub { font-size:13px; }
-  .regime { font-size:13px; }
-  .coin b { font-size:13px; }
-  .up,.down,.gain,.loss,.positive,.direction { font-size:13px; }
-  .card h3 { font-size:22px; }
-  .muted { font-size:14px; }
-  .chip { font-size:12px; }
-  .sector b { font-size:13px; }
-  .sector small { font-size:11px; }
-  .newsitem h4 { font-size:15px; }
-  .newsitem p { font-size:13px; }
-  .impactmini { font-size:11px; }
-  .time { font-size:12px; }
-  .impactscoreline span { font-size:11px; }
-  .impactscale { font-size:9px; }
-  .decisionstrip span { font-size:12px; }
-  .decisionstrip b { font-size:9px; }
-  .decisioncall b { font-size:16px; }
-  .positiongrid span { font-size:9px; }
-  .positiongrid b { font-size:11px; }
-  .preeventclock>span:last-child { font-size:11px; }
-  .windowline { font-size:11px; }
-  .guidance-row>span { font-size:10px; }
-  .guidance-row>b { font-size:13px; }
+  .navlinks{font-size:14px}.lang{font-size:13px}.sign{font-size:14px}.eyebrow{font-size:12px}.hero p{font-size:18px;line-height:1.65}.label{font-size:12px}.sub{font-size:13px}.regime{font-size:13px}.coin b{font-size:13px}.up,.down,.gain,.loss,.positive,.direction{font-size:13px}.card h3{font-size:22px}.muted{font-size:14px}.chip{font-size:12px}.sector b{font-size:13px}.sector small{font-size:11px}.newsitem h4{font-size:15px}.newsitem p{font-size:13px}.impactmini{font-size:11px}.time{font-size:12px}.impactscoreline span{font-size:11px}.impactscale{font-size:9px}.decisionstrip span{font-size:12px}.decisionstrip b{font-size:9px}.decisioncall b{font-size:16px}.positiongrid span{font-size:9px}.positiongrid b{font-size:11px}.preeventclock>span:last-child{font-size:11px}.windowline{font-size:11px}.guidance-row>span{font-size:10px}.guidance-row>b{font-size:13px}
 }
 
 @media(max-width:800px) {
-  .shell { width:min(100% - 48px, 680px) !important; margin-left:auto !important; margin-right:auto !important; }
-  .navlinks { font-size:14px; }
-  .lang,.sign { font-size:13px; }
-  .eyebrow { font-size:12px; }
-  .hero-main { font-size:clamp(42px,11vw,58px); }
-  .hero-sub { font-size:clamp(20px,5vw,25px); }
-  .hero p { font-size:17px; line-height:1.65; }
-  .label { font-size:12px; }
-  .sub { font-size:13px; }
-  .muted { font-size:14px; }
-  .card h3 { font-size:22px; }
-  .chip { font-size:12px; }
-  .sector b { font-size:13px; }
-  .sector small { font-size:11px; }
-  .newsitem h4 { font-size:15px; }
-  .newsitem p { font-size:13px; }
-  .impactmini { font-size:11px; }
-  .time { font-size:12px; }
-  .windowline { font-size:11px; }
-  .decisionstrip span { font-size:11px; }
-  .decisionstrip b { font-size:9px; }
-  .positiongrid span { font-size:9px; }
-  .positiongrid b { font-size:11px; }
-  .preeventclock>span:last-child { font-size:11px; }
-  .guidance-row>span { font-size:10px; }
-  .guidance-row>b { font-size:13px; }
-}
+  /* Mobile width: slightly wider than the previous 24px side margin, while preserving a deliberate premium gutter. */
+  .shell { width:calc(100% - 40px) !important; max-width:none !important; margin-left:auto !important; margin-right:auto !important; }
+  .navlinks{font-size:14px}.lang,.sign{font-size:13px}.eyebrow{font-size:12px}.hero-main{font-size:clamp(42px,11vw,58px)}.hero-sub{font-size:clamp(20px,5vw,25px)}.hero p{font-size:17px;line-height:1.65}.label{font-size:12px}.sub{font-size:13px}.muted{font-size:14px}.card h3{font-size:22px}.chip{font-size:12px}.sector b{font-size:13px}.sector small{font-size:11px}.newsitem h4{font-size:15px}.newsitem p{font-size:13px}.impactmini{font-size:11px}.time{font-size:12px}.windowline{font-size:11px}.decisionstrip span{font-size:11px}.decisionstrip b{font-size:9px}.positiongrid span{font-size:9px}.positiongrid b{font-size:11px}.preeventclock>span:last-child{font-size:11px}.guidance-row>span{font-size:10px}.guidance-row>b{font-size:13px}
 
-.re-predictive .re-kicker { font-size:12px; }
-.re-predictive .re-risk strong { font-size:22px; }
-.re-predictive .re-risk small { font-size:13px; color:#bdb9b0; }
-.re-predictive .re-scenario span { font-size:12px; }
-.re-predictive .re-scenario b { font-size:14px; line-height:1.55; }
-.re-predictive .re-check li { font-size:13px; line-height:1.55; color:#bdb9b0; }
-.re-predictive .re-action p { font-size:13px; color:#c8c4bb; }
+  /* Every adjacent data card gets the same 14px rhythm. */
+  #impact > .grid,
+  #impact > .highdetail,
+  #impact .detailgrid,
+  #impact .positiongrid,
+  .detailgrid,
+  .positiongrid { gap:14px !important; }
 
-.re-predictive .re-check .re-kicker {
-  color:#e8e5de !important;
-  font-size:12px !important;
-}
-.re-predictive .re-check ul {
-  margin-top:10px !important;
-  gap:7px !important;
-}
-.re-predictive .re-check li {
-  display:grid !important;
-  grid-template-columns:10px minmax(0,1fr) !important;
-  column-gap:7px !important;
-  align-items:start !important;
-  color:#bdb9b0 !important;
-  line-height:1.55 !important;
-}
-.re-predictive .re-check li::before {
-  grid-column:1 !important;
-  margin-right:0 !important;
-  color:var(--gold-soft) !important;
-  line-height:1.55 !important;
-}
-:root[data-theme="light"] .re-predictive .re-check .re-kicker { color:#4b4740 !important; }
-:root[data-theme="light"] .re-predictive .re-check li { color:#777168 !important; }
-:root[data-theme="light"] .re-predictive .re-check li::before { color:var(--gold-soft) !important; }
-
-.re-position span { color:#858178 !important; font-size:10px !important; }
-.re-position b { color:#e8e5de !important; font-size:12px !important; line-height:1.55 !important; }
-:root[data-theme="light"] .re-position span { color:#6f695f !important; }
-:root[data-theme="light"] .re-position b { color:#3b3832 !important; }
-
-@media(max-width:800px) {
-  /* One consistent mobile content column. Do not let #impact override .shell. */
-  #impact {
-    display:block !important;
-    width:min(100% - 48px, 680px) !important;
-    max-width:680px !important;
-    margin-left:auto !important;
-    margin-right:auto !important;
-  }
+  #impact { display:block !important; width:100% !important; max-width:100% !important; }
   #impact > .sectiontitle,
   #impact > .card,
   #impact > .grid,
-  #impact > .highdetail {
-    width:100% !important;
-    max-width:100% !important;
-    min-width:0 !important;
-    box-sizing:border-box !important;
-  }
+  #impact > .highdetail { width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; }
   #impact > .card:nth-child(3),
   #impact > .card:nth-child(5),
   #impact > .card:nth-child(6),
-  #impact > .card:nth-child(7) {
-    width:100% !important;
-    margin-left:0 !important;
-    margin-right:0 !important;
-  }
-  #impact > .grid { display:grid !important; grid-template-columns:1fr !important; gap:14px !important; }
+  #impact > .card:nth-child(7) { width:100% !important; margin-left:0 !important; margin-right:0 !important; }
+  #impact > .grid { display:grid !important; grid-template-columns:1fr !important; }
   #impact > .highdetail { display:block !important; }
   #impact > .highdetail .detailgrid,
   #impact > .highdetail + .card .detailgrid,
-  #impact > .highdetail + .card + .card .detailgrid {
-    width:100% !important;
-    max-width:100% !important;
-  }
+  #impact > .highdetail + .card + .card .detailgrid { width:100% !important; max-width:100% !important; gap:14px !important; }
 
-  /* Premium breathing room between standalone cards/blocks. */
+  /* Uniform spacing between main sections. */
+  #impact > .sectiontitle { margin-bottom:14px !important; }
   #impact > .card,
   #impact > .grid,
-  #impact > .highdetail {
-    margin-bottom:14px !important;
-  }
-  #impact > .sectiontitle { margin-bottom:14px !important; }
-  #impact > .grid > .card { margin-bottom:0 !important; }
+  #impact > .highdetail { margin-bottom:14px !important; }
+  #impact > .grid > .card,
   #impact > .highdetail > .card { margin-bottom:0 !important; }
-
-  /* Give every two-column data grid a consistent vertical/horizontal rhythm. */
-  #impact .detailgrid,
-  #impact .positiongrid {
-    gap:14px !important;
-  }
-  #impact .highdetail .detailgrid {
-    gap:14px !important;
-  }
 }
 
-/* The Market Intelligence label is neutral light grey; gold remains reserved for the brand accent. */
-.hero .eyebrow {
-  color:#b7b3a9 !important;
-}
+/* Neutral Market Intelligence eyebrow. */
+.hero .eyebrow { color:#b7b3a9 !important; }
 
-/* Force the supplied PNG to render even if the legacy data URI in the page is stale/broken. */
-.brand-logo {
-  content:url('/halver-logo.png') !important;
-}
+/* Use the supplied logo asset path when present. */
+.brand-logo { content:url('/halver-logo.png') !important; }
 
-/* Premium blood-red accent: deep red, not pink. Keep it readable on dark mode. */
-:root {
-  --red:#b64040;
-}
-:root[data-theme="dark"] {
-  --red:#c04a4a;
-}
-.impact:before {
-  background:linear-gradient(180deg,#c04a4a,#8f2f2f) !important;
-}
-.badge {
-  color:var(--red) !important;
-  border-color:#4b3030 !important;
-}
-.badge-hot {
-  background:rgba(182,64,64,.10) !important;
-}
-.impactsegment:nth-child(9) { background:#b64040 !important; }
-.impactsegment:nth-child(10) { background:#8f2f2f !important; }
+/* Premium blood-red accent: deep, elegant, and readable on dark mode. */
+:root { --red:#b64040; }
+:root[data-theme="dark"] { --red:#c04a4a; }
+.impact:before { background:linear-gradient(180deg,#c04a4a,#8f2f2f) !important; }
+.badge { color:var(--red) !important; border-color:#4b3030 !important; }
+.badge-hot { background:rgba(182,64,64,.10) !important; }
+.impactsegment:nth-child(9){background:#b64040 !important}.impactsegment:nth-child(10){background:#8f2f2f !important}
 
-/* Override the older V1 bias hardcodes so every bearish signal uses the same blood-red system. */
+/* All bearish/short signals use the same blood-red system; override legacy pink hard-codes. */
 #impact:has(.direction) .impactscoreline > span,
 #impact:has(.direction) .highdetail .detail:nth-child(4) b,
 #impact:has(.direction) .highdetail .detail:nth-child(6) b,
 #impact:has(.direction) .highdetail .detail:nth-child(7) b,
-#impact > .grid > .card:nth-child(2):has(.direction) .decisioncall,
-#impact > .grid > .card:nth-child(2):has(.direction) .decisioncall b,
-#impact:has(.direction) .decisioncall b.direction,
-#impact:has(.direction) .direction {
-  color:var(--red) !important;
-}
+#impact:has(.direction) .decisioncall,
+#impact:has(.direction) .decisioncall b,
+#impact:has(.direction) .decisioncall .direction,
+#impact:has(.direction) .direction,
+#impact .short-pos b,
+#impact .short-pos strong,
+#impact .short-pos .direction,
+#impact > .highdetail + .card + .card .detail:nth-child(3) b,
+.re-position .short-pos b { color:var(--red) !important; }
+
 #impact > .grid > .card:nth-child(2):has(.direction) .decisioncall {
-  background:rgba(192,74,74,.055) !important;
+  background:rgba(192,74,74,.075) !important;
   border-color:rgba(192,74,74,.28) !important;
 }
+#impact .short-pos::before,
+#impact > .highdetail + .card + .card .detail:nth-child(3)::before,
+.re-position .short-pos::before { background:var(--red) !important; }
+#impact .short-pos,
+#impact > .highdetail + .card + .card .detail:nth-child(3),
+.re-position .short-pos { background:rgba(192,74,74,.075) !important; border-color:rgba(192,74,74,.24) !important; }
 
+/* Preserve approved gold accent. */
 .brand-edge,
 :root[data-theme="dark"] .brand-edge,
 :root[data-theme="light"] .brand-edge,
 .hero-sub,
-:root[data-theme="dark"] .hero-sub {
-  color:var(--gold-soft) !important;
-}
+:root[data-theme="dark"] .hero-sub { color:var(--gold-soft) !important; }
