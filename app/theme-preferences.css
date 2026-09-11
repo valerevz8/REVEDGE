@@ -7,6 +7,8 @@
 /* Dark mode: slightly brighter borders for clearer hierarchy without losing the premium feel. */
 :root[data-theme="dark"] {
   --line:#34322e;
+  /* Locked REVEDGE brand gold — preserve the original accent, do not brighten. */
+  --gold-soft:#a17f50;
 }
 :root[data-theme="dark"] .card,
 :root[data-theme="dark"] .market,
@@ -35,7 +37,7 @@
 :root[data-theme="dark"] .coin { border-color:var(--line); }
 :root[data-theme="dark"] .re-calnav button { border:1px solid var(--line); }
 
-/* REVESENSE wordmark: REVE stays neutral, SENSE carries the gold accent. */
+/* REVESENSE wordmark: REVE stays neutral, SENSE carries the locked original gold accent. */
 :root[data-theme="dark"] .brand-rev { color:#d9d6ce !important; }
 :root[data-theme="light"] .brand-rev { color:#4d4942 !important; }
 .brand-edge { color:var(--gold-soft) !important; }
