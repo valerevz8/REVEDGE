@@ -184,6 +184,26 @@
   content:url('/halver-logo.png') !important;
 }
 
+/* Premium blood-red accent: deep red, not pink. Keep it readable on dark mode. */
+:root {
+  --red:#b64040;
+}
+:root[data-theme="dark"] {
+  --red:#c04a4a;
+}
+.impact:before {
+  background:linear-gradient(180deg,#c04a4a,#8f2f2f) !important;
+}
+.badge {
+  color:var(--red) !important;
+  border-color:#4b3030 !important;
+}
+.badge-hot {
+  background:rgba(182,64,64,.10) !important;
+}
+.impactsegment:nth-child(9) { background:#b64040 !important; }
+.impactsegment:nth-child(10) { background:#8f2f2f !important; }
+
 .brand-edge,
 :root[data-theme="dark"] .brand-edge,
 :root[data-theme="light"] .brand-edge,
