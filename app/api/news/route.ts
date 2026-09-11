@@ -15,7 +15,19 @@ const FEEDS = [
 ];
 
 function clean(v: string) {
-  return v.replace(/<!\[CDATA\[|\]\]>/g, "").replace(/<[^>]+>/g, " ").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&apos;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&#x27;/g, "'").replace(/\s+/g, " ").trim();
+  // Decode entities BEFORE stripping tags. Google News can escape HTML as &lt;a ...&gt;.
+  return v
+    .replace(/<!\[CDATA\[|\]\]>/g, "")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&#x27;/g, "'")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function tagFor(text: string) {
@@ -109,7 +121,6 @@ function biasFor(d: string, tag: string) {
   return tag === "MACRO" ? "Neutral" : "Wait for confirmation";
 }
 
-// Keep the actual headline visible. Generic labels hide the reason the market is moving.
 function sharpHeadline(_tag: string, _d: string, title: string) {
   return title.replace(/\s+/g, " ").trim();
 }
@@ -220,15 +231,22 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const forceRefresh = url.searchParams.has("scheduled_refresh");
   const store = getStore("revedge-intelligence");
+  const minImpact = 7.0;
+  const sanitizeSnapshot = (snapshot: any) => ({
+    ...snapshot,
+    stories: Array.isArray(snapshot?.stories)
+      ? snapshot.stories.filter((story: any) => Number(story?.impact ?? 0) >= minImpact && (!story?.ageHours || story.ageHours < 36)).slice(0, 5)
+      : [],
+  });
 
   if (!forceRefresh) {
     try {
       const intelligence = await store.get("latest-intelligence", { type: "json" });
       if (intelligence) {
-        return NextResponse.json(intelligence, { headers: { "Cache-Control": "public, max-age=0, s-maxage=15, stale-while-revalidate=30", "CDN-Cache-Control": "public, max-age=15, stale-while-revalidate=30", "Netlify-CDN-Cache-Control": "public, durable, max-age=15, stale-while-revalidate=30" } });
+        return NextResponse.json(sanitizeSnapshot(intelligence), { headers: { "Cache-Control": "public, max-age=0, s-maxage=15, stale-while-revalidate=30", "CDN-Cache-Control": "public, max-age=15, stale-while-revalidate=30", "Netlify-CDN-Cache-Control": "public, durable, max-age=15, stale-while-revalidate=30" } });
       }
       const cached = await store.get("latest-news", { type: "json" });
-      if (cached) return NextResponse.json(cached);
+      if (cached) return NextResponse.json(sanitizeSnapshot(cached));
     } catch {
       // Bootstrap below if the persistent snapshot is not available yet.
     }
@@ -251,7 +269,7 @@ export async function GET(request: Request) {
   }
 
   const curated = [...unique.values()]
-    .filter((story) => story.ageHours < 36 && story.impact >= 7.5)
+    .filter((story) => story.ageHours < 36 && story.impact >= minImpact)
     .sort((a, b) => (b.priority - a.priority) || (new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()))
     .slice(0, 5);
 
