@@ -78,7 +78,7 @@
 }
 
 @media(max-width:800px) {
-  .shell { width:min(100% - 28px, 680px); }
+  .shell { width:min(100% - 48px, 680px) !important; margin-left:auto !important; margin-right:auto !important; }
   .navlinks { font-size:14px; }
   .lang,.sign { font-size:13px; }
   .eyebrow { font-size:12px; }
@@ -146,7 +146,14 @@
 :root[data-theme="light"] .re-position b { color:#3b3832 !important; }
 
 @media(max-width:800px) {
-  #impact { display:block !important; width:100% !important; }
+  /* One consistent mobile content column. Do not let #impact override .shell. */
+  #impact {
+    display:block !important;
+    width:min(100% - 48px, 680px) !important;
+    max-width:680px !important;
+    margin-left:auto !important;
+    margin-right:auto !important;
+  }
   #impact > .sectiontitle,
   #impact > .card,
   #impact > .grid,
@@ -164,13 +171,32 @@
     margin-left:0 !important;
     margin-right:0 !important;
   }
-  #impact > .grid { display:grid !important; grid-template-columns:1fr !important; gap:12px !important; }
+  #impact > .grid { display:grid !important; grid-template-columns:1fr !important; gap:14px !important; }
   #impact > .highdetail { display:block !important; }
   #impact > .highdetail .detailgrid,
   #impact > .highdetail + .card .detailgrid,
   #impact > .highdetail + .card + .card .detailgrid {
     width:100% !important;
     max-width:100% !important;
+  }
+
+  /* Premium breathing room between standalone cards/blocks. */
+  #impact > .card,
+  #impact > .grid,
+  #impact > .highdetail {
+    margin-bottom:14px !important;
+  }
+  #impact > .sectiontitle { margin-bottom:14px !important; }
+  #impact > .grid > .card { margin-bottom:0 !important; }
+  #impact > .highdetail > .card { margin-bottom:0 !important; }
+
+  /* Give every two-column data grid a consistent vertical/horizontal rhythm. */
+  #impact .detailgrid,
+  #impact .positiongrid {
+    gap:14px !important;
+  }
+  #impact .highdetail .detailgrid {
+    gap:14px !important;
   }
 }
 
@@ -203,6 +229,22 @@
 }
 .impactsegment:nth-child(9) { background:#b64040 !important; }
 .impactsegment:nth-child(10) { background:#8f2f2f !important; }
+
+/* Override the older V1 bias hardcodes so every bearish signal uses the same blood-red system. */
+#impact:has(.direction) .impactscoreline > span,
+#impact:has(.direction) .highdetail .detail:nth-child(4) b,
+#impact:has(.direction) .highdetail .detail:nth-child(6) b,
+#impact:has(.direction) .highdetail .detail:nth-child(7) b,
+#impact > .grid > .card:nth-child(2):has(.direction) .decisioncall,
+#impact > .grid > .card:nth-child(2):has(.direction) .decisioncall b,
+#impact:has(.direction) .decisioncall b.direction,
+#impact:has(.direction) .direction {
+  color:var(--red) !important;
+}
+#impact > .grid > .card:nth-child(2):has(.direction) .decisioncall {
+  background:rgba(192,74,74,.055) !important;
+  border-color:rgba(192,74,74,.28) !important;
+}
 
 .brand-edge,
 :root[data-theme="dark"] .brand-edge,
