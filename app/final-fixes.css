@@ -1,12 +1,14 @@
 /* FINAL MOBILE + BRAND POLISH */
 
-/* 1) Macro Caution bearish state: use the same deep blood-red system as the rest of HALVER. */
+/* 1) Macro Caution bearish state: exact same blood-red as Liquidity Sweep. */
 #impact .decisionstatus.bias-riskoff .biasbox {
   background:rgba(192,74,74,.09) !important;
-  border-color:rgba(192,74,74,.55) !important;
+  border-color:#c04a4a !important;
   box-shadow:inset 4px 0 0 #c04a4a !important;
 }
-#impact .decisionstatus.bias-riskoff .biasbox b {
+#impact .decisionstatus.bias-riskoff .biasbox b,
+#impact .decisionstatus.bias-riskoff .biasbox strong,
+#impact .decisionstatus.bias-riskoff .biasbox .direction {
   color:#c04a4a !important;
 }
 
