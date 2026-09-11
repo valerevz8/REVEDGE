@@ -109,25 +109,38 @@
 }
 
 /* Predictive Radar — typography only. Do not alter panel, border, or gold colors. */
-.re-predictive .re-kicker { font-size:10px; }
-.re-predictive .re-risk strong { font-size:20px; }
-.re-predictive .re-risk small { font-size:11px; color:#bdb9b0; }
-.re-predictive .re-scenario span { font-size:10px; }
-.re-predictive .re-scenario b { font-size:12px; line-height:1.55; }
-.re-predictive .re-check li { font-size:11px; line-height:1.55; color:#bdb9b0; }
-.re-predictive .re-action p { font-size:11px; color:#bdb9b0; }
+.re-predictive .re-kicker { font-size:12px; }
+.re-predictive .re-risk strong { font-size:22px; }
+.re-predictive .re-risk small { font-size:13px; color:#bdb9b0; }
+.re-predictive .re-scenario span { font-size:12px; }
+.re-predictive .re-scenario b { font-size:14px; line-height:1.55; }
+.re-predictive .re-check li { font-size:13px; line-height:1.55; color:#c8c4bb; }
+.re-predictive .re-action p { font-size:13px; color:#c8c4bb; }
 
-/* Light mode: make Confirmation / Invalidation body copy clearly readable. */
+/* Confirmation / Invalidation explanation — color only, about 20% lighter. */
 :root[data-theme="light"] .re-check li {
-  color:#777168 !important;
+  color:#8b8479 !important;
 }
 :root[data-theme="light"] .re-check li::marker {
   color:var(--gold-soft);
 }
 
-/* Event Calendar position guidance — fix light-mode readability only. */
-:root[data-theme="light"] .re-position span { color:#6f695f !important; font-size:10px; }
-:root[data-theme="light"] .re-position b { color:#3b3832 !important; font-size:12px; line-height:1.55; }
+/* Event Calendar position guidance — readable in both themes. */
+.re-position span {
+  color:#858178 !important;
+  font-size:10px !important;
+}
+.re-position b {
+  color:#e8e5de !important;
+  font-size:12px !important;
+  line-height:1.55 !important;
+}
+:root[data-theme="light"] .re-position span {
+  color:#6f695f !important;
+}
+:root[data-theme="light"] .re-position b {
+  color:#3b3832 !important;
+}
 
 /* GOLD LOCK — approved gold remains untouched. */
 .brand-edge,
