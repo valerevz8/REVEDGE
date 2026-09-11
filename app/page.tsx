@@ -22,15 +22,17 @@ export default function Home() {
         .guidance-row>b{font-size:12px;line-height:1.45;color:var(--text)}
         [data-theme="dark"] .re-predictive,[data-theme="dark"] #impact{--line:#403323}
         [data-theme="dark"] .re-predictive .re-predictive-main,[data-theme="dark"] .re-predictive .re-predictive-side{border-color:var(--line)}
+        .brand-logo{display:block;width:138px;height:auto;max-height:40px;object-fit:contain}
         @media(max-width:800px){
           #impact{display:block}
           #impact>.sectiontitle,#impact>.card,#impact>.grid,#impact>.highdetail{width:auto}
           #impact>.sectiontitle{margin-top:22px}
           .guidance-row{grid-template-columns:110px minmax(0,1fr);gap:18px}
+          .brand-logo{width:116px;max-height:34px}
         }
       `}</style>
       <header className="shell nav">
-        <a className="brand" href="#top"><span className="brand-rev">REVE</span><span className="brand-edge">SENSE</span></a>
+        <a className="brand" href="#top" aria-label="HALVER"><img className="brand-logo" src="/halver-logo.svg" alt="HALVER" /></a>
         <nav className="navlinks"><a href="#impact">High Impact</a><a href="/calendar">Event Calendar</a><a href="#market">Market</a><a href="#sectors">Sectors</a><a href="#pro">Pricing</a></nav>
         <div className="navright"><HeaderPreferences /><a className="sign" href="#pro">Sign in</a><button className="probtn">Go Pro</button></div>
       </header>
@@ -38,12 +40,12 @@ export default function Home() {
       <RealtimeHighImpact />
 
       <section className="shell hero" id="top">
-        <div><div className="eyebrow">Curated crypto intelligence</div><h1><span className="hero-main">See what matters.</span><span className="hero-sub">Before the noise.</span></h1><p>Market-moving events, live market structure, and capital rotation — filtered down to what a trader actually needs to know.</p><div className="actions"><a className="btn primary" href="#impact">Explore REVESENSE</a><a className="btn" href="/calendar">View Event Calendar</a></div></div><MarketNow /></section>
+        <div><div className="eyebrow">Curated crypto intelligence</div><h1><span className="hero-main">See what matters.</span><span className="hero-sub">Before the noise.</span></h1><p>Market-moving events, live market structure, and capital rotation — filtered down to what a trader actually needs to know.</p><div className="actions"><a className="btn primary" href="#impact">Explore HALVER</a><a className="btn" href="/calendar">View Event Calendar</a></div></div><MarketNow /></section>
 
       <SectorRadar />
 
-      <section className="shell section" id="pro"><div className="card" style={{textAlign:"center",padding:"34px 20px"}}><div className="label">REVESENSE PRO</div><h2 style={{fontSize:30,marginTop:8}}>The market, personalized.</h2><p className="muted" style={{maxWidth:560,margin:"10px auto 20px"}}>Watchlist intelligence, personalized impact, custom alerts, and deeper sector signals. Free stays public. Pro becomes yours.</p><a className="btn primary" href="#top">Explore Pro</a></div></section>
-      <footer className="shell footer"><span>REVESENSE · A REVE ecosystem product</span><span>See what matters. Before the noise.</span></footer>
+      <section className="shell section" id="pro"><div className="card" style={{textAlign:"center",padding:"34px 20px"}}><div className="label">HALVER PRO</div><h2 style={{fontSize:30,marginTop:8}}>The market, personalized.</h2><p className="muted" style={{maxWidth:560,margin:"10px auto 20px"}}>Watchlist intelligence, personalized impact, custom alerts, and deeper sector signals. Free stays public. Pro becomes yours.</p><a className="btn primary" href="#top">Explore Pro</a></div></section>
+      <footer className="shell footer"><span>HALVER · A REVE ecosystem product</span><span>See what matters. Before the noise.</span></footer>
     </main>
   );
 }
