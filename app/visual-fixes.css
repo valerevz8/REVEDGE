@@ -11,7 +11,7 @@
 }
 
 /* REVESENSE typography/readability refinement.
-   Keep the approved gold unchanged; only text sizing/contrast and dividers change. */
+   Keep the approved gold and existing line/background colors unchanged. */
 :root[data-theme="dark"] {
   --line:#403e39;
 }
@@ -107,6 +107,19 @@
   .guidance-row>span { font-size:10px; }
   .guidance-row>b { font-size:13px; }
 }
+
+/* Predictive Radar — typography only. Do not alter panel, border, or gold colors. */
+.re-predictive .re-kicker { font-size:10px; }
+.re-predictive .re-risk strong { font-size:20px; }
+.re-predictive .re-risk small { font-size:11px; color:#bdb9b0; }
+.re-predictive .re-scenario span { font-size:10px; }
+.re-predictive .re-scenario b { font-size:12px; line-height:1.55; }
+.re-predictive .re-check li { font-size:11px; line-height:1.55; color:#bdb9b0; }
+.re-predictive .re-action p { font-size:11px; color:#bdb9b0; }
+
+/* Event Calendar position guidance — fix light-mode readability only. */
+:root[data-theme="light"] .re-position span { color:#6f695f !important; font-size:10px; }
+:root[data-theme="light"] .re-position b { color:#3b3832 !important; font-size:12px; line-height:1.55; }
 
 /* GOLD LOCK — approved gold remains untouched. */
 .brand-edge,
