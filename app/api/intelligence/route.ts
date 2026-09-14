@@ -31,7 +31,7 @@ function buildHalverInput(event: any) {
   const corroboration = Math.min(1, Number(event.sourceCount ?? event.sources?.length ?? 1) / 4);
   const freshness = Number(event.ageHours ?? 12) <= 3 ? 0.25 : Number(event.ageHours ?? 12) <= 12 ? 0.1 : -0.1;
   const structure = clamp(direction * (0.45 + corroboration * 0.25 + freshness));
-  const positioning = clamp(direction * (0.2 + Math.min(0.35, Number(event.impact ?? 7) / 30));
+  const positioning = clamp(direction * (0.2 + Math.min(0.35, Number(event.impact ?? 7) / 30)));
   const transmission = clamp(direction * Math.max(0.25, confirmation * 0.75 + corroboration * 0.25));
   return { market: { regime: clamp(direction * 0.65), expectations: clamp(expectation || direction * 0.45), positioning, policyPressure: macroPressure, surprise: surprise || direction * 0.25, transmission, btcStructure: structure }, dataQuality: clamp(0.55 + corroboration * 0.25 + Math.min(0.2, Number(event.confirmation ?? 0) / 500), 0, 1) };
 }
