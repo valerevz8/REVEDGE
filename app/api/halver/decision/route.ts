@@ -7,7 +7,7 @@ export async function POST(request: Request) {
     if (!body?.market) {
       return NextResponse.json({ error: "market input is required" }, { status: 400 });
     }
-    return NextResponse.json({ engine: "HALVER Decision Engine v1", result: evaluateHalver(body) });
+    return NextResponse.json({ engine: "HALVER Decision Engine v2", result: evaluateHalver(body) });
   } catch {
     return NextResponse.json({ error: "Invalid HALVER decision payload" }, { status: 400 });
   }
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
 
 export async function GET() {
   return NextResponse.json({
-    engine: "HALVER Decision Engine v1",
+    engine: "HALVER Decision Engine v2",
     status: "ready",
     philosophy: "Predict → Observe → Validate → Adapt → Decide",
     rules: {
@@ -24,6 +24,7 @@ export async function GET() {
       strongFailure: "failed reaction with retracement >= 75%",
       acceptance: "reaction level held AND retracement < 50% AND >=2/6 cross-asset confirmations",
       confirmation: "DXY, yields, Nasdaq, ETH, SOL, TOTAL3",
+      principle: "Wick != acceptance",
     },
   });
 }
