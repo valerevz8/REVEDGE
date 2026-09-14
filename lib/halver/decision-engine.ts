@@ -52,6 +52,9 @@ const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(ma
 const round = (n: number) => Math.round(n);
 const signDirection = (score: number): Direction => score >= 40 ? "BULLISH" : score <= -40 ? "BEARISH" : "NEUTRAL";
 
+type CrossAsset = NonNullable<HalverInput["reaction"]>["crossAsset"];
+type Reaction = NonNullable<HalverInput["reaction"]>;
+
 export function calculateBias(input: HalverInput["market"], dataQuality = 1) {
   const weights = {
     regime: 15,
@@ -90,14 +93,14 @@ function getInitialDirection(initialMove: number): Direction {
   return "NEUTRAL";
 }
 
-function confirmationScore(direction: Direction, cross: HalverInput["reaction"]["crossAsset"]) {
+function confirmationScore(direction: Direction, cross: CrossAsset) {
   if (direction === "NEUTRAL") return 0;
   const values = [cross.dxy, cross.yields, cross.nasdaq, cross.eth, cross.sol, cross.total3];
   const confirmed = values.filter((v) => direction === "BULLISH" ? v >= 0.35 : v <= -0.35).length;
   return confirmed;
 }
 
-function reactionQuality(reaction: NonNullable<HalverInput["reaction"]>, direction: Direction, state: ReactionState) {
+function reactionQuality(reaction: Reaction, direction: Direction, state: ReactionState) {
   if (direction === "NEUTRAL") return 0;
   const acceptance = state === "ACCEPTED" ? 100 : state === "REJECTED" ? 20 : state === "FAILED" ? 0 : 50;
   const cross = confirmationScore(direction, reaction.crossAsset);
@@ -151,6 +154,8 @@ export function evaluateHalver(input: HalverInput): HalverDecision {
   const initialMagnitude = Math.abs(reaction.initialMove);
   let reactionState: ReactionState = "UNRESOLVED";
 
+  // Hard HALVER rules: a meaningful impulse that retraces 50%+ and loses its reaction
+  // level is a failed reaction. 75%+ retracement is a strong failure.
   const failed = initialMagnitude >= 0.7 && reaction.retracement >= 0.5 && !reaction.reactionLevelHeld;
   const strongFailure = failed && reaction.retracement >= 0.75;
   const accepted = initialMagnitude >= 0.3 && reaction.reactionLevelHeld && reaction.retracement < 0.5 && confirmationScore(reactionDirection, reaction.crossAsset) >= 2;
