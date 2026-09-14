@@ -64,12 +64,14 @@ function riskMapping(result: ReturnType<typeof evaluateHalver>) {
 }
 
 function halverPredictive(event: any) {
+  const sourceDirection = event.direction as "Risk-on" | "Risk-off" | "Neutral";
   const result = evaluateHalver(buildHalverInput(event));
   const risk = riskMapping(result);
   const directional = result.bias === "BULLISH" ? "Bullish" : result.bias === "BEARISH" ? "Bearish" : "Neutral";
+  const engineDirection = result.bias === "BULLISH" ? "Risk-on" : result.bias === "BEARISH" ? "Risk-off" : "Neutral";
   const directionScore = result.bias === "BULLISH" ? result.bullishProbability : result.bias === "BEARISH" ? result.bearishProbability : 50;
-  const base = event.direction === "Risk-off" ? event.bearCase : event.bullCase;
-  const riskCase = event.direction === "Risk-off" ? event.bullCase : event.bearCase;
+  const base = sourceDirection === "Risk-off" ? event.bearCase : event.bullCase;
+  const riskCase = sourceDirection === "Risk-off" ? event.bullCase : event.bearCase;
   const confirmation = [
     result.trigger,
     ...(event.whatToWatch ?? []),
@@ -89,13 +91,14 @@ function halverPredictive(event: any) {
     immediateRead: result.rationale[0] ?? `Pre-event ${directional.toLowerCase()} bias.`,
     baseCase: base ?? (directional === "Bullish" ? "Upside reaction holds and expands." : directional === "Bearish" ? "Downside reaction holds and expands." : "Price remains two-way until confirmation appears."),
     riskCase: riskCase ?? "Initial reaction fails to gain follow-through.",
-    worstCase: event.direction === "Risk-off" ? (event.bearCase ?? "Downside transmission accelerates.") : (event.bearCase ?? "Breakout fails and reverses."),
+    worstCase: sourceDirection === "Risk-off" ? (event.bearCase ?? "Downside transmission accelerates.") : (event.bearCase ?? "Breakout fails and reverses."),
     confirmation,
     invalidation,
     why: `${result.bullishProbability}% bullish / ${result.bearishProbability}% bearish reaction probability. ${result.transmissionRead}`,
     engine: "HALVER Decision Engine v2",
     phase: result.phase,
     bias: result.bias,
+    engineDirection,
     thesisStatus: result.thesisStatus,
     edgeQuality: result.edgeQuality,
     setupType: result.setupType,
@@ -107,11 +110,18 @@ function halverPredictive(event: any) {
 
 function enrich(snapshot: any) {
   if (!snapshot?.events) return snapshot;
-  const events = snapshot.events.map((event: any) => ({
-    ...event,
-    predictive: halverPredictive(event),
-    legacyPredictive: buildPredictiveLayer(event),
-  }));
+  const events = snapshot.events.map((event: any) => {
+    const predictive = halverPredictive(event);
+    return {
+      ...event,
+      // The news classifier remains available as legacyDirection; HALVER becomes the
+      // authoritative direction when it has a real directional edge.
+      legacyDirection: event.direction,
+      direction: predictive.bias === "NEUTRAL" ? event.direction : predictive.engineDirection,
+      predictive,
+      legacyPredictive: buildPredictiveLayer(event),
+    };
+  });
   return { ...snapshot, events, stories: events, predictiveEngine: "HALVER Decision Engine v2" };
 }
 
