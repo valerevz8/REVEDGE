@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import HighImpact from "./HighImpact";
 import PredictiveDecision from "./PredictiveDecision";
+import HalverBrainLive from "./HalverBrainLive";
+import HalverIntelligenceSuite from "./HalverIntelligenceSuite";
 
 type IntelligenceEvent = {
   eventId?: string;
@@ -87,6 +89,8 @@ export default function RealtimeHighImpact() {
       `}</style>
       <PredictiveDecision />
       <HighImpact key={tick} />
+      <HalverBrainLive />
+      <HalverIntelligenceSuite />
     </div>
   );
 }
