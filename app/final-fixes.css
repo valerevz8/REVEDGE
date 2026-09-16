@@ -31,3 +31,65 @@
 .hero-main + .hero-sub {
   margin-top:12px !important;
 }
+
+/* 4) HALVER Reaction Engine: improve desktop readability without changing layout. */
+@media(min-width:801px) {
+  .halver-live-kicker,
+  .halver-surprise-kicker {
+    font-size:9px !important;
+  }
+
+  .halver-live-head h3 {
+    font-size:21px !important;
+  }
+
+  .halver-live-step {
+    font-size:9px !important;
+  }
+
+  .halver-live-box span,
+  .halver-live-prob span,
+  .halver-live-meta span,
+  .halver-live-delta-cell span {
+    font-size:8px !important;
+  }
+
+  .halver-live-box strong {
+    font-size:16px !important;
+  }
+
+  .halver-live-box small,
+  .halver-live-note p,
+  .halver-live-delta small {
+    font-size:9px !important;
+  }
+
+  .halver-live-prob b {
+    font-size:18px !important;
+  }
+
+  .halver-live-meta b,
+  .halver-live-delta-cell b {
+    font-size:11px !important;
+  }
+
+  .halver-surprise-title {
+    font-size:18px !important;
+  }
+
+  .halver-surprise-sub {
+    font-size:9px !important;
+  }
+
+  .halver-surprise-card strong {
+    font-size:13px !important;
+  }
+
+  .halver-surprise-card b {
+    font-size:10px !important;
+  }
+
+  .halver-surprise-card p {
+    font-size:9px !important;
+  }
+}
