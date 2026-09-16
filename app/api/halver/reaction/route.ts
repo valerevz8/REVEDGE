@@ -58,7 +58,8 @@ export async function GET(request: NextRequest) {
     }
 
     const window = klines.slice(Math.max(0, eventIndex - 5), Math.min(klines.length, eventIndex + 31));
-    const reaction = buildReactionWindow(window, expectedMovePct);
+    const pivot = Math.min(5, Math.max(1, eventIndex));
+    const reaction = buildReactionWindow(window, expectedMovePct, pivot);
     if (!reaction) throw new Error("Unable to calculate reaction window");
 
     return NextResponse.json({
