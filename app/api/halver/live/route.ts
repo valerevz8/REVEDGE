@@ -12,6 +12,17 @@ function num(params: URLSearchParams, key: string, fallback = 0) {
   return Number.isFinite(value) ? value : fallback;
 }
 
+function classifyEvent(title = "", category = "") {
+  const t = `${title} ${category}`.toUpperCase();
+  if (t.includes("FOMC")) return { type: "FOMC", policyPressure: 0.915, sensitivity: 1.0 };
+  if (t.includes("CPI")) return { type: "CPI", policyPressure: 0.65, sensitivity: 0.95 };
+  if (t.includes("PCE")) return { type: "PCE", policyPressure: 0.65, sensitivity: 0.95 };
+  if (t.includes("PPI")) return { type: "PPI", policyPressure: 0.45, sensitivity: 0.8 };
+  if (t.includes("NFP") || t.includes("EMPLOYMENT SITUATION")) return { type: "NFP", policyPressure: 0.35, sensitivity: 0.8 };
+  if (t.includes("JOLTS")) return { type: "JOLTS", policyPressure: 0.2, sensitivity: 0.6 };
+  return { type: "MACRO", policyPressure: 0.15, sensitivity: 0.55 };
+}
+
 function buildMarketInput(market: any, params: URLSearchParams): HalverInput["market"] {
   const btc = Number(market?.coins?.find((c: any) => c.symbol === "BTC")?.change ?? 0);
   const eth = Number(market?.coins?.find((c: any) => c.symbol === "ETH")?.change ?? 0);
@@ -20,16 +31,19 @@ function buildMarketInput(market: any, params: URLSearchParams): HalverInput["ma
   const dxy = Number(market?.crossAsset?.dxy?.changePct ?? 0);
   const yields = Number(market?.crossAsset?.yields10y?.changePct ?? 0);
   const nasdaq = Number(market?.crossAsset?.nasdaq?.changePct ?? 0);
+  const profile = classifyEvent(params.get("eventType") ?? "", params.get("eventCategory") ?? "");
 
   const cryptoRegime = clamp(btc * 0.45 / 2 + eth * 0.2 / 2 + sol * 0.15 / 2 + total3 * 0.2 / 2);
   const transmission = clamp((nasdaq / 1.5 - dxy / 1.5 - yields / 0.5 + total3 / 2) / 4);
   const policyPressure = params.has("policyPressure")
     ? num(params, "policyPressure")
-    : params.get("preset") === "fomc-sep-2026" ? 0.915 : 0;
+    : params.has("preset")
+      ? num(params, "policyPressure", profile.policyPressure)
+      : profile.policyPressure;
 
   return {
     regime: cryptoRegime,
-    expectations: num(params, "expectations", cryptoRegime),
+    expectations: num(params, "expectations", cryptoRegime * profile.sensitivity),
     positioning: num(params, "positioning", pctSignal(btc, 2)),
     policyPressure: clamp(policyPressure),
     surprise: num(params, "surprise", 0),
@@ -74,6 +88,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const eventMs = num(searchParams, "eventMs", 0);
     const expectedMovePct = searchParams.get("expectedMovePct");
+    const eventType = searchParams.get("eventType") || classifyEvent(searchParams.get("event") || "", searchParams.get("eventCategory") || "").type;
 
     const marketResponse = await fetch(new URL("/api/market", request.url), {
       cache: "no-store",
@@ -98,10 +113,13 @@ export async function GET(request: NextRequest) {
     };
 
     const result = evaluateHalver(input);
+    const profile = classifyEvent(eventType, searchParams.get("eventCategory") || "");
 
     return NextResponse.json({
       ok: true,
       engine: "HALVER Decision Engine v2",
+      eventType: profile.type,
+      eventProfile: { policySensitivity: profile.policyPressure, directionalSensitivity: profile.sensitivity },
       mode: reaction?.reaction ? "POST_EVENT" : "PRE_EVENT",
       eventMs: eventMs || null,
       preset: searchParams.get("preset") || null,
