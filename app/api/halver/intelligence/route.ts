@@ -12,28 +12,8 @@ type Market = {
   };
 };
 
-type Engine = {
-  bias: "BULLISH" | "BEARISH" | "NEUTRAL";
-  biasScore: number;
-  bullishProbability: number;
-  bearishProbability: number;
-  phase: string;
-  decision: string;
-  reversalRisk: "LOW" | "MEDIUM" | "HIGH";
-  reactionQuality: number | null;
-  tradeability: number | null;
-  thesisStatus: string;
-  trigger: string;
-  invalidation: string;
-  transmissionRead: string;
-};
-
-function clamp(n: number, min = 0, max = 100) {
-  return Math.max(min, Math.min(max, n));
-}
-function scoreSigned(n: number, scale: number) {
-  return clamp(50 + (n / scale) * 50, 0, 100);
-}
+function clamp(n: number, min = 0, max = 100) { return Math.max(min, Math.min(max, n)); }
+function scoreSigned(n: number, scale: number) { return clamp(50 + (n / scale) * 50, 0, 100); }
 function median(values: number[]) {
   if (!values.length) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -41,14 +21,10 @@ function median(values: number[]) {
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 async function candles(symbol: string, interval = "15m", limit = 96): Promise<Candle[]> {
-  const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`, {
-    next: { revalidate: 15 },
-    headers: { accept: "application/json" },
-  });
+  const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`, { next: { revalidate: 15 }, headers: { accept: "application/json" } });
   if (!response.ok) throw new Error(`Binance ${symbol} unavailable`);
   return response.json();
 }
-
 function liquidity(c: Candle[]) {
   const highs = c.map((x) => Number(x[2]));
   const lows = c.map((x) => Number(x[3]));
@@ -64,18 +40,8 @@ function liquidity(c: Candle[]) {
   const lowerDistance = ((close - low) / range) * 100;
   const buyStops = clamp(45 + highClusters * 10 + Math.max(0, 20 - upperDistance));
   const sellStops = clamp(45 + lowClusters * 10 + Math.max(0, 20 - lowerDistance));
-  return {
-    buyStops,
-    sellStops,
-    imbalance: Math.abs(buyStops - sellStops),
-    high,
-    low,
-    close,
-    highClusters,
-    lowClusters,
-  };
+  return { buyStops, sellStops, imbalance: Math.abs(buyStops - sellStops), high, low, close, highClusters, lowClusters };
 }
-
 function structure(c: Candle[]) {
   const closes = c.map((x) => Number(x[4]));
   const fast = median(closes.slice(-8));
@@ -87,14 +53,13 @@ function structure(c: Candle[]) {
   const position = recentHigh === recentLow ? 50 : ((last - recentLow) / (recentHigh - recentLow)) * 100;
   return { trend, position, recentHigh, recentLow };
 }
-
-function volumeScore(c: Candle[]) {
-  const vols = c.map((x) => Number(x[5]));
-  const recent = median(vols.slice(-4));
-  const baseline = median(vols.slice(-32, -4));
-  return baseline ? clamp((recent / baseline) * 50) : 50;
+function flowScore(c: Candle[]) {
+  const recent = c.slice(-8).reduce((sum, x) => sum + (2 * Number(x[9]) - Number(x[5])), 0);
+  const baseline = c.slice(-32, -8).reduce((sum, x) => sum + (2 * Number(x[9]) - Number(x[5])), 0);
+  if (!Number.isFinite(recent) || !Number.isFinite(baseline)) return 50;
+  const scale = Math.max(1, Math.abs(baseline) / 3);
+  return scoreSigned(recent / scale, 1);
 }
-
 function crossAssetScore(m: Market) {
   const btc = m.coins.find((x) => x.symbol === "BTC")?.change ?? 0;
   const eth = m.coins.find((x) => x.symbol === "ETH")?.change ?? 0;
@@ -112,18 +77,15 @@ export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const eventMs = Number(url.searchParams.get("eventMs") ?? 0);
-    const [marketResponse, btc, eth, sol] = await Promise.all([
+    const [marketResponse, btc] = await Promise.all([
       fetch(new URL("/api/market", url), { cache: "no-store" }),
       candles("BTCUSDT"),
-      candles("ETHUSDT"),
-      candles("SOLUSDT"),
     ]);
     if (!marketResponse.ok) throw new Error("Market snapshot unavailable");
     const market = (await marketResponse.json()) as Market;
-
     const lq = liquidity(btc);
     const st = structure(btc);
-    const volume = volumeScore(btc);
+    const flow = flowScore(btc);
     const cross = crossAssetScore(market);
     const btc24 = cross.btc;
     const breadth = cross.total3;
@@ -134,19 +96,16 @@ export async function GET(request: Request) {
     const breadthScore = scoreSigned(breadth, 2.5);
     const cryptoAlignment = scoreSigned((cross.eth + cross.sol + btc24) / 3, 2.5);
     const catalystScore = eventMs > 0 ? (Date.now() < eventMs ? 78 : 86) : 55;
-
     const components = [
-      { name: "Macro Catalyst", score: macroScore, weight: 25 },
+      { name: "Macro Catalyst", score: catalystScore, weight: 25 },
       { name: "Market Structure", score: marketStructure, weight: 20 },
       { name: "Liquidity", score: liquidityScore, weight: 15 },
-      { name: "Volume / CVD", score: volume, weight: 15 },
+      { name: "Volume / Flow", score: flow, weight: 15 },
       { name: "Cross Asset Confirmation", score: cross.score, weight: 15 },
       { name: "Market Breadth", score: breadthScore, weight: 10 },
     ];
     const vexScore = Math.round(components.reduce((sum, item) => sum + item.score * item.weight, 0) / 100);
-
-    const directional =
-      macroScore * 0.25 + marketStructure * 0.2 + cryptoAlignment * 0.2 + breadthScore * 0.15 + cross.score * 0.2;
+    const directional = macroScore * 0.25 + marketStructure * 0.2 + cryptoAlignment * 0.2 + breadthScore * 0.15 + cross.score * 0.2;
     const biasScore = Math.round((directional - 50) * 2);
     const bias = biasScore >= 12 ? "BULLISH" : biasScore <= -12 ? "BEARISH" : "NEUTRAL";
 
@@ -154,7 +113,7 @@ export async function GET(request: Request) {
       { label: "Macro catalyst defined", ok: eventMs > 0 },
       { label: "Liquidity sweep / probe identified", ok: lq.imbalance >= 10 },
       { label: "Structure aligned", ok: Math.abs(st.trend) >= 0.12 },
-      { label: "Volume expansion", ok: volume >= 58 },
+      { label: "Volume / flow expansion", ok: flow >= 58 },
       { label: "BTC + ETH/SOL aligned", ok: Math.sign(btc24) === Math.sign(cross.eth) && Math.sign(btc24) === Math.sign(cross.sol) },
       { label: "TOTAL3 breadth confirms", ok: Math.sign(btc24) === Math.sign(breadth) && Math.abs(breadth) >= 0.25 },
       { label: "Macro + price aligned", ok: Math.sign(btc24) === Math.sign(cross.nasdaq - cross.dxy - cross.yields) },
@@ -162,7 +121,7 @@ export async function GET(request: Request) {
       { label: "Tradeability threshold", ok: vexScore >= 70 },
     ];
 
-    const tradeability = Math.round((vexScore * 0.55 + cross.score * 0.2 + volume * 0.15 + breadthScore * 0.1));
+    const tradeability = Math.round(clamp(vexScore * 0.55 + cross.score * 0.2 + flow * 0.15 + breadthScore * 0.1));
     const reversalRisk = lq.imbalance >= 30 || (Math.abs(st.trend) < 0.15 && vexScore < 65) ? "HIGH" : lq.imbalance >= 18 ? "MEDIUM" : "LOW";
     const decision = bias === "BULLISH" ? "LONG" : bias === "BEARISH" ? "SHORT" : "WAIT";
     const phase = eventMs && Date.now() < eventMs ? "PRE_EVENT" : "POST_EVENT";
@@ -173,7 +132,6 @@ export async function GET(request: Request) {
     const whipsaw = clamp(Math.round(scenarioBase));
     const scenarioBull = clamp(Math.round((bullish + (100 - whipsaw) * 0.35) / 1.35));
     const scenarioBear = clamp(100 - whipsaw - scenarioBull);
-
     const reactionLabel = lq.buyStops > lq.sellStops ? "Upside liquidity is denser; a sweep before continuation is possible." : lq.sellStops > lq.buyStops ? "Downside liquidity is denser; a downside probe is possible." : "Liquidity is balanced; wait for the event to reveal the side of acceptance.";
     const transmission = `${cross.dxy >= 0 ? "DXY firm" : "DXY soft"} · ${cross.yields >= 0 ? "yields firm" : "yields ease"} · ${cross.nasdaq >= 0 ? "Nasdaq supportive" : "Nasdaq weak"} · ETH ${cross.eth >= 0 ? "up" : "down"} · SOL ${cross.sol >= 0 ? "up" : "down"}`;
 
@@ -193,8 +151,7 @@ export async function GET(request: Request) {
       decision: { phase, decision, tradeability, reversalRisk, thesisStatus: phase === "PRE_EVENT" ? "PENDING" : "VALIDATING", trigger: reactionLabel, invalidation: bias === "BULLISH" ? "BTC loses the pre-event structure with cross-asset confirmation." : bias === "BEARISH" ? "BTC reclaims the pre-event structure with cross-asset confirmation." : "Price and cross-asset signals remain misaligned.", transmissionRead: transmission },
       structure: { trendPct: st.trend, positionPct: st.position, recentHigh: st.recentHigh, recentLow: st.recentLow },
       reaction: { initial: "WICK ≠ ACCEPTANCE", note: "A spike is only an initial reaction. HALVER waits for the level to hold and for cross-asset transmission to confirm." },
-      engine: { bias, biasScore, bullishProbability: bullish, bearishProbability: bearish, phase, decision, reversalRisk, reactionQuality: null, tradeability, thesisStatus: phase === "PRE_EVENT" ? "PENDING" : "VALIDATING", trigger: reactionLabel, invalidation: bias === "BULLISH" ? "BTC loses the pre-event structure with cross-asset confirmation." : bias === "BEARISH" ? "BTC reclaims the pre-event structure with cross-asset confirmation." : "Price and cross-asset signals remain misaligned.", transmissionRead: transmission },
-      sources: { candles: "Binance public market data", market: "HALVER /api/market" },
+      sources: { candles: "Binance public market data", market: "HALVER /api/market", flow: "Binance taker-buy volume proxy" },
     }, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return NextResponse.json({ ok: false, error: "HALVER intelligence temporarily unavailable" }, { status: 503 });
