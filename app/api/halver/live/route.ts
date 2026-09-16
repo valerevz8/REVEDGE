@@ -25,7 +25,7 @@ function buildMarketInput(market: any, params: URLSearchParams): HalverInput["ma
   const transmission = clamp((nasdaq / 1.5 - dxy / 1.5 - yields / 0.5 + total3 / 2) / 4);
   const policyPressure = params.has("policyPressure")
     ? num(params, "policyPressure")
-    : params.get("preset") === "fomc-sep-2026" ? 0.83 : 0;
+    : params.get("preset") === "fomc-sep-2026" ? 0.915 : 0;
 
   return {
     regime: cryptoRegime,
