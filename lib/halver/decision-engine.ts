@@ -14,6 +14,7 @@ export interface CrossAsset {
   total3: number;
 }
 
+// Fast market fields are part of the public engine input so the live route and build share one source of truth.
 export interface HalverInput {
   market: {
     regime: number;
