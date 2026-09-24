@@ -180,7 +180,6 @@ export function evaluateHalver(input: HalverInput): HalverDecision {
   const stateDir = stateDirection(marketState);
   const warnings: string[] = [];
   const rationale: string[] = [];
-  const quality = edgeQuality(bias.score);
 
   if (!input.reaction) {
     const fastOverride = marketState === "CONFIRMED BEARISH" || marketState === "CONFIRMED BULLISH" || marketState === "BEARISH" || marketState === "BULLISH";
@@ -189,7 +188,6 @@ export function evaluateHalver(input: HalverInput): HalverDecision {
     if (marketState === "CONFIRMED BULLISH") effectiveScore = Math.max(effectiveScore, 42);
     if (marketState === "BEARISH") effectiveScore = Math.min(effectiveScore, -36);
     if (marketState === "BULLISH") effectiveScore = Math.max(effectiveScore, 36);
-    const effectiveBias = calculateBias({ ...input.market, fastMarketScore: undefined }, dataQuality);
     const directional = fastOverride ? stateDir !== "NEUTRAL" : effectiveBias.direction !== "NEUTRAL";
     const finalDirection = fastOverride ? stateDir : bias.direction;
     const finalScore = fastOverride ? effectiveScore : bias.score;
