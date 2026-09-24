@@ -188,7 +188,7 @@ export function evaluateHalver(input: HalverInput): HalverDecision {
     if (marketState === "CONFIRMED BULLISH") effectiveScore = Math.max(effectiveScore, 42);
     if (marketState === "BEARISH") effectiveScore = Math.min(effectiveScore, -36);
     if (marketState === "BULLISH") effectiveScore = Math.max(effectiveScore, 36);
-    const directional = fastOverride ? stateDir !== "NEUTRAL" : effectiveBias.direction !== "NEUTRAL";
+    const directional = fastOverride ? stateDir !== "NEUTRAL" : bias.direction !== "NEUTRAL";
     const finalDirection = fastOverride ? stateDir : bias.direction;
     const finalScore = fastOverride ? effectiveScore : bias.score;
     const finalBullish = round(clamp(50 + finalScore / 2, 0, 100));
