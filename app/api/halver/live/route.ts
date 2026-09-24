@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { evaluateHalver, type CrossAsset, type HalverInput } from "../../../lib/halver/decision-engine";
+import { evaluateHalver, type CrossAsset, type HalverInput } from "../../../../lib/halver/decision-engine";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
