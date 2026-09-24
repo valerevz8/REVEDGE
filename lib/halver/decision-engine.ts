@@ -3,6 +3,7 @@ export type Decision = "LONG" | "SHORT" | "WAIT" | "NO_TRADE" | "REVERSAL_WATCH"
 export type ReactionState = "UNRESOLVED" | "ACCEPTED" | "REJECTED" | "FAILED";
 export type ThesisStatus = "PENDING" | "VALIDATED" | "WEAKENED" | "INVALIDATED";
 export type Phase = "PRE_EVENT" | "INITIAL_REACTION" | "ACCEPTANCE" | "TRANSMISSION";
+export type MarketState = "EARLY BULLISH" | "BULLISH" | "CONFIRMED BULLISH" | "EARLY BEARISH" | "BEARISH" | "CONFIRMED BEARISH" | "REVERSAL WATCH" | "NO EDGE";
 
 export interface CrossAsset {
   dxy: number;
@@ -22,6 +23,12 @@ export interface HalverInput {
     surprise: number;
     transmission: number;
     btcStructure: number;
+    /** Fast 5m composite, -1..1. Used to detect directional change before slow 24h data catches up. */
+    fastMarketScore?: number;
+    /** Fast breadth confirmation, -1..1. */
+    fastBreadth?: number;
+    /** Fast BTC structure score, -1..1. */
+    fastStructure?: number;
   };
   reaction?: {
     initialMove: number;
@@ -38,6 +45,7 @@ export interface HalverInput {
 
 export interface HalverDecision {
   phase: Phase;
+  marketState: MarketState;
   biasScore: number;
   bias: Direction;
   bullishProbability: number;
@@ -62,6 +70,35 @@ export interface HalverDecision {
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 const round = (n: number) => Math.round(n);
 const signDirection = (score: number): Direction => score >= 40 ? "BULLISH" : score <= -40 ? "BEARISH" : "NEUTRAL";
+
+function deriveMarketState(market: HalverInput["market"]): MarketState {
+  const fast = clamp(market.fastMarketScore ?? 0, -1, 1);
+  const breadth = clamp(market.fastBreadth ?? 0, -1, 1);
+  const structure = clamp(market.fastStructure ?? market.btcStructure ?? 0, -1, 1);
+
+  // Fast structure is deliberately allowed to lead the slow 24h regime.
+  // The goal is to surface an actionable change before a full-day move is visible.
+  const bearishConfirmed =
+    fast <= -0.42 ||
+    (fast <= -0.28 && structure <= -0.55 && breadth <= -0.20);
+  const bullishConfirmed =
+    fast >= 0.42 ||
+    (fast >= 0.28 && structure >= 0.55 && breadth >= 0.20);
+
+  if (bearishConfirmed) return "CONFIRMED BEARISH";
+  if (bullishConfirmed) return "CONFIRMED BULLISH";
+  if (fast <= -0.22 || (structure <= -0.45 && breadth <= -0.10)) return "BEARISH";
+  if (fast >= 0.22 || (structure >= 0.45 && breadth >= 0.10)) return "BULLISH";
+  if (fast <= -0.10) return "EARLY BEARISH";
+  if (fast >= 0.10) return "EARLY BULLISH";
+  return "NO EDGE";
+}
+
+function stateDirection(state: MarketState): Direction {
+  if (state.includes("BEARISH")) return "BEARISH";
+  if (state.includes("BULLISH")) return "BULLISH";
+  return "NEUTRAL";
+}
 
 type Reaction = NonNullable<HalverInput["reaction"]>;
 
@@ -139,35 +176,58 @@ function edgeQuality(score: number): HalverDecision["edgeQuality"] {
 export function evaluateHalver(input: HalverInput): HalverDecision {
   const dataQuality = clamp(input.dataQuality ?? 1, 0, 1);
   const bias = calculateBias(input.market, dataQuality);
+  const marketState = deriveMarketState(input.market);
+  const stateDir = stateDirection(marketState);
   const warnings: string[] = [];
   const rationale: string[] = [];
   const quality = edgeQuality(bias.score);
 
   if (!input.reaction) {
-    const directional = bias.direction !== "NEUTRAL";
-    if (directional) warnings.push("Pre-event directional edge detected, but price confirmation is still required.");
+    const fastOverride = marketState === "CONFIRMED BEARISH" || marketState === "CONFIRMED BULLISH" || marketState === "BEARISH" || marketState === "BULLISH";
+    let effectiveScore = bias.score;
+    if (marketState === "CONFIRMED BEARISH") effectiveScore = Math.min(effectiveScore, -42);
+    if (marketState === "CONFIRMED BULLISH") effectiveScore = Math.max(effectiveScore, 42);
+    if (marketState === "BEARISH") effectiveScore = Math.min(effectiveScore, -36);
+    if (marketState === "BULLISH") effectiveScore = Math.max(effectiveScore, 36);
+    const effectiveBias = calculateBias({ ...input.market, fastMarketScore: undefined }, dataQuality);
+    const directional = fastOverride ? stateDir !== "NEUTRAL" : effectiveBias.direction !== "NEUTRAL";
+    const finalDirection = fastOverride ? stateDir : bias.direction;
+    const finalScore = fastOverride ? effectiveScore : bias.score;
+    const finalBullish = round(clamp(50 + finalScore / 2, 0, 100));
+    const finalBearish = 100 - finalBullish;
+    if (marketState === "CONFIRMED BEARISH") warnings.push("Fast market state confirms downside acceleration before the next scheduled catalyst.");
+    else if (marketState === "CONFIRMED BULLISH") warnings.push("Fast market state confirms upside acceleration before the next scheduled catalyst.");
+    else if (marketState === "EARLY BEARISH") warnings.push("Early bearish shift detected. Price confirmation is still required.");
+    else if (marketState === "EARLY BULLISH") warnings.push("Early bullish shift detected. Price confirmation is still required.");
+    else if (directional) warnings.push("Pre-event directional edge detected, but price confirmation is still required.");
     else warnings.push("Directional edge is weak.");
     if (dataQuality < 0.8) warnings.push("Partial data: confirmation confidence reduced.");
-    rationale.push(`Pre-event ${bias.direction.toLowerCase()} bias with ${bias.bullishProbability}% bullish reaction probability.`);
-    rationale.push(`Edge quality: ${quality.toLowerCase()}.`);
+    rationale.push(`Market state: ${marketState}.`);
+    rationale.push(`Pre-event ${finalDirection.toLowerCase()} bias with ${finalBullish}% bullish reaction probability.`);
+    rationale.push(`Edge quality: ${edgeQuality(finalScore).toLowerCase()}.`);
     return {
       phase: "PRE_EVENT",
-      biasScore: bias.score,
-      bias: bias.direction,
-      bullishProbability: bias.bullishProbability,
-      bearishProbability: bias.bearishProbability,
+      marketState,
+      biasScore: finalScore,
+      bias: finalDirection,
+      bullishProbability: finalBullish,
+      bearishProbability: finalBearish,
       reactionDirection: "NEUTRAL",
       reactionState: "UNRESOLVED",
       reactionQuality: null,
       thesisStatus: "PENDING",
       tradeability: null,
-      decision: directional ? (bias.direction === "BULLISH" ? "LONG" : "SHORT") : "WAIT",
-      reversalRisk: "LOW",
+      decision: directional ? (finalDirection === "BULLISH" ? "LONG" : "SHORT") : "WAIT",
+      reversalRisk: marketState === "EARLY BEARISH" || marketState === "EARLY BULLISH" ? "MEDIUM" : "LOW",
       setupType: directional ? "DIRECTIONAL" : "NO_EDGE",
-      edgeQuality: quality,
-      trigger: bias.direction === "BULLISH" ? "BTC reclaims and holds the catalyst level with cross-asset confirmation." : bias.direction === "BEARISH" ? "BTC loses the catalyst level with cross-asset confirmation." : "Wait for price and breadth to align.",
-      invalidation: bias.direction === "BULLISH" ? "BTC loses the pre-event structure or macro transmission turns against risk." : bias.direction === "BEARISH" ? "BTC reclaims the pre-event structure or macro transmission turns supportive." : "No clean directional confirmation.",
-      reactionRead: "Awaiting initial event response.",
+      edgeQuality: edgeQuality(finalScore),
+      trigger: finalDirection === "BULLISH" ? "BTC reclaims and holds the catalyst level with cross-asset confirmation." : finalDirection === "BEARISH" ? "BTC loses the key structure, then confirms a failed reclaim with breadth weakness." : "Wait for price and breadth to align.",
+      invalidation: finalDirection === "BULLISH" ? "BTC loses the pre-event structure or macro transmission turns against risk." : finalDirection === "BEARISH" ? "BTC reclaims the failed level and holds with cross-asset confirmation." : "No clean directional confirmation.",
+      reactionRead: marketState === "CONFIRMED BEARISH"
+        ? "Bearish acceleration is already visible before the scheduled catalyst. Do not wait for the next event to recognize the current market state."
+        : marketState === "CONFIRMED BULLISH"
+          ? "Bullish acceleration is already visible before the scheduled catalyst. Do not wait for the next event to recognize the current market state."
+          : "Awaiting initial event response.",
       transmissionRead: "Awaiting macro → liquidity → crypto transmission.",
       warnings,
       rationale,
@@ -244,8 +304,15 @@ export function evaluateHalver(input: HalverInput): HalverDecision {
   rationale.push(`Acceptance: ${reactionState}; reaction quality ${rQuality}/100.`);
   rationale.push(`Cross-asset confirmation: ${confirmation}/6.`);
 
+  const finalState: MarketState = reactionState === "FAILED" && directionMatchesBias
+    ? "REVERSAL WATCH"
+    : reactionState === "ACCEPTED" && directionMatchesBias
+      ? (bias.direction === "BEARISH" ? "CONFIRMED BEARISH" : bias.direction === "BULLISH" ? "CONFIRMED BULLISH" : marketState)
+      : marketState;
+
   return {
     phase,
+    marketState: finalState,
     biasScore: bias.score,
     bias: bias.direction,
     bullishProbability: bias.bullishProbability,
