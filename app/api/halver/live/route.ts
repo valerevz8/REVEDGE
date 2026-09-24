@@ -52,6 +52,9 @@ function buildMarketInput(market: any, params: URLSearchParams, fast: any = null
     surprise: num(params, "surprise", 0),
     transmission,
     btcStructure: clamp(Number(fast?.btc?.score ?? 0) / 100 * 0.75 + pctSignal(btc, 2) * 0.25),
+    fastMarketScore: clamp(Number(fast?.score ?? 0) / 100),
+    fastBreadth: clamp(Number(fast?.breadth ?? 0) / 100),
+    fastStructure: clamp(Number(fast?.btc?.score ?? 0)),
   };
 }
 
@@ -133,6 +136,7 @@ export async function GET(request: NextRequest) {
       preset: searchParams.get("preset") || null,
       fastMarket: fast,
       intelligenceSignal: intelSignal,
+      marketState: result.marketState,
       market: {
         btc: market?.coins?.find((c: any) => c.symbol === "BTC") ?? null,
         eth: market?.coins?.find((c: any) => c.symbol === "ETH") ?? null,
