@@ -133,6 +133,12 @@ export async function GET(request: NextRequest) {
       reaction,
       input,
       result,
+      dataQuality: input.dataQuality ?? 0,
+      sources: {
+        market: market?.source ?? "Live market feed",
+        reaction: reaction?.source ?? "Binance spot 1m klines",
+        calendar: "HALVER catalyst calendar",
+      },
       observedAt: new Date().toISOString(),
     }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
