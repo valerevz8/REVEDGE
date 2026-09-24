@@ -23,7 +23,7 @@ function classifyEvent(title = "", category = "") {
   return { type: "MACRO", policyPressure: 0.15, sensitivity: 0.55 };
 }
 
-function buildMarketInput(market: any, params: URLSearchParams): HalverInput["market"] {
+function buildMarketInput(market: any, params: URLSearchParams, fast: any = null, intelSignal = 0): HalverInput["market"] {
   const btc = Number(market?.coins?.find((c: any) => c.symbol === "BTC")?.change ?? 0);
   const eth = Number(market?.coins?.find((c: any) => c.symbol === "ETH")?.change ?? 0);
   const sol = Number(market?.coins?.find((c: any) => c.symbol === "SOL")?.change ?? 0);
@@ -33,8 +33,11 @@ function buildMarketInput(market: any, params: URLSearchParams): HalverInput["ma
   const nasdaq = Number(market?.crossAsset?.nasdaq?.changePct ?? 0);
   const profile = classifyEvent(params.get("eventType") ?? "", params.get("eventCategory") ?? "");
 
-  const cryptoRegime = clamp(btc * 0.45 / 2 + eth * 0.2 / 2 + sol * 0.15 / 2 + total3 * 0.2 / 2);
-  const transmission = clamp((nasdaq / 1.5 - dxy / 1.5 - yields / 0.5 + total3 / 2) / 4);
+  const slowRegime = clamp(btc * 0.45 / 2 + eth * 0.2 / 2 + sol * 0.15 / 2 + total3 * 0.2 / 2);
+  const fastRegime = clamp(Number(fast?.score ?? 0) / 100);
+  const cryptoRegime = clamp(fastRegime * 0.60 + slowRegime * 0.20 + intelSignal * 0.20);
+  const fastTransmission = clamp((Number(fast?.btc?.score ?? 0) * 0.55 + Number(fast?.breadth ?? 0) / 100 * 0.25 + intelSignal * 0.20));
+  const transmission = clamp(fastTransmission * 0.65 + (nasdaq / 1.5 - dxy / 1.5 - yields / 0.5 + total3 / 2) / 4 * 0.35);
   const policyPressure = params.has("policyPressure")
     ? num(params, "policyPressure")
     : params.has("preset")
@@ -43,12 +46,12 @@ function buildMarketInput(market: any, params: URLSearchParams): HalverInput["ma
 
   return {
     regime: cryptoRegime,
-    expectations: num(params, "expectations", cryptoRegime * profile.sensitivity),
-    positioning: num(params, "positioning", pctSignal(btc, 2)),
+    expectations: num(params, "expectations", clamp(cryptoRegime * profile.sensitivity + intelSignal * 0.25)),
+    positioning: num(params, "positioning", clamp(Number(fast?.breadth ?? 0) / 100 * 0.6 + pctSignal(btc, 2) * 0.4)),
     policyPressure: clamp(policyPressure),
     surprise: num(params, "surprise", 0),
     transmission,
-    btcStructure: pctSignal(btc, 2),
+    btcStructure: clamp(Number(fast?.btc?.score ?? 0) / 100 * 0.75 + pctSignal(btc, 2) * 0.25),
   };
 }
 
@@ -90,12 +93,17 @@ export async function GET(request: NextRequest) {
     const expectedMovePct = searchParams.get("expectedMovePct");
     const eventType = searchParams.get("eventType") || classifyEvent(searchParams.get("event") || "", searchParams.get("eventCategory") || "").type;
 
-    const marketResponse = await fetch(new URL("/api/market", request.url), {
-      cache: "no-store",
-      headers: { accept: "application/json" },
-    });
+    const [marketResponse, fastResponse, intelligenceResponse] = await Promise.all([
+      fetch(new URL("/api/market", request.url), { cache: "no-store", headers: { accept: "application/json" } }),
+      fetch(new URL("/api/halver/fast-market", request.url), { cache: "no-store", headers: { accept: "application/json" } }),
+      fetch(new URL("/api/intelligence", request.url), { cache: "no-store", headers: { accept: "application/json" } }),
+    ]);
     if (!marketResponse.ok) throw new Error("Market data unavailable");
     const market = await marketResponse.json();
+    const fast = fastResponse.ok ? await fastResponse.json() : null;
+    const intelligence = intelligenceResponse.ok ? await intelligenceResponse.json() : null;
+    const lead = intelligence?.events?.[0];
+    const intelSignal = lead?.direction === "Risk-off" ? -0.85 : lead?.direction === "Risk-on" ? 0.85 : 0;
 
     let reaction: any = null;
     if (eventMs > 0 && eventMs <= Date.now()) {
@@ -107,8 +115,8 @@ export async function GET(request: NextRequest) {
     }
 
     const input: HalverInput = {
-      market: buildMarketInput(market, searchParams),
-      dataQuality: market?.crossAsset ? 0.9 : 0.7,
+      market: buildMarketInput(market, searchParams, fast, intelSignal),
+      dataQuality: market?.crossAsset && fast?.ok ? 0.95 : market?.crossAsset ? 0.85 : 0.7,
       ...(reaction?.reaction ? { reaction: buildReactionInput(reaction, market) } : {}),
     };
 
@@ -123,6 +131,8 @@ export async function GET(request: NextRequest) {
       mode: reaction?.reaction ? "POST_EVENT" : "PRE_EVENT",
       eventMs: eventMs || null,
       preset: searchParams.get("preset") || null,
+      fastMarket: fast,
+      intelligenceSignal: intelSignal,
       market: {
         btc: market?.coins?.find((c: any) => c.symbol === "BTC") ?? null,
         eth: market?.coins?.find((c: any) => c.symbol === "ETH") ?? null,
@@ -138,6 +148,7 @@ export async function GET(request: NextRequest) {
         market: market?.source ?? "Live market feed",
         reaction: reaction?.source ?? "Binance spot 1m klines",
         calendar: "HALVER catalyst calendar",
+        fastMarket: fast?.source ?? "Intraday market feed",
       },
       observedAt: new Date().toISOString(),
     }, { headers: { "Cache-Control": "no-store" } });
